@@ -1,69 +1,124 @@
-import Image from "next/image";
+"use client";
+
+import Link from "next/link";
+import { ArrowRight, BookOpen, Compass, Flame, Map as MapIcon, Puzzle, Star, Trophy } from "lucide-react";
+import { Mascot } from "@/components/Mascot";
+import { Card, LinkButton, ProgressBar } from "@/components/ui";
+import { GAMES } from "@/components/games/registry";
+import { getDistricts, PILOT_STATE, STATE_COUNT, UT_COUNT } from "@/lib/content";
+import { levelFor, useProgress } from "@/lib/progress";
+
+const SECTIONS = [
+  { href: "/explore", title: "Explore India", text: "Tap any state on the big map", icon: Compass, bg: "bg-primary-soft", fg: "text-primary" },
+  { href: "/states", title: "Learn States", text: "Capitals, languages & fun facts", icon: BookOpen, bg: "bg-success-soft", fg: "text-success" },
+  { href: "/districts/tamil-nadu", title: "Learn Districts", text: "Discover all 38 districts of Tamil Nadu", icon: MapIcon, bg: "bg-secondary-soft", fg: "text-[#c58a00]" },
+  { href: "/puzzle", title: "Map Puzzle", text: "Drag names to the right place", icon: Puzzle, bg: "bg-accent-soft", fg: "text-accent" },
+  { href: "/quiz", title: "Quiz Challenge", text: "Beginner to Advanced", icon: Trophy, bg: "bg-[#efe8fd]", fg: "text-[#7b55e0]" },
+];
 
 export default function Home() {
+  const p = useProgress();
+  const lvl = levelFor(p.points);
+  const tnTotal = getDistricts(PILOT_STATE).length;
+  const tnLearned = p.districtsLearned[PILOT_STATE]?.length ?? 0;
+  const greeting = p.points === 0 ? "Hi! I'm Gaju. Let's explore India together!" : `Welcome back, ${lvl.name}! Ready for today's adventure?`;
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert h-5 w-[100px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the{" "}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              page.tsx
-            </code>{" "}
-            file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <div className="space-y-6">
+      <section className="relative overflow-hidden rounded-[2rem] bg-primary px-6 py-8 text-white sm:px-10 sm:py-10">
+        <svg className="absolute -right-10 -top-10 h-64 w-64 opacity-15" viewBox="0 0 100 100" aria-hidden>
+          <circle cx="50" cy="50" r="48" fill="none" stroke="white" strokeWidth="2" strokeDasharray="4 6" />
+          <circle cx="50" cy="50" r="30" fill="none" stroke="white" strokeWidth="2" />
+        </svg>
+        <div className="relative flex flex-col items-start gap-6 sm:flex-row sm:items-center">
+          <Mascot mood="cheer" size={140} className="animate-float" />
+          <div className="flex-1">
+            <p className="font-display text-lg font-semibold text-secondary">{greeting}</p>
+            <h1 className="mt-1 text-4xl font-extrabold leading-tight sm:text-5xl">India Map Explorer</h1>
+            <p className="mt-2 max-w-xl text-lg text-white/85">
+              Discover {STATE_COUNT} states, {UT_COUNT} Union Territories and their districts through maps, puzzles and games.
+            </p>
+            <div className="mt-5 flex flex-wrap gap-3">
+              <LinkButton href="/explore" tone="secondary">
+                Start exploring <ArrowRight className="size-5" />
+              </LinkButton>
+              <LinkButton href={`/puzzle/${PILOT_STATE}`} tone="white">
+                Tamil Nadu puzzle
+              </LinkButton>
+            </div>
+          </div>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert h-[14px] w-4"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+      </section>
+
+      <section className="grid gap-4 sm:grid-cols-3">
+        <Card className="flex items-center gap-4">
+          <div className="grid size-14 place-items-center rounded-2xl bg-secondary-soft">
+            <Star className="size-7 fill-secondary text-[#e5a100]" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="text-sm font-bold text-ink-soft">Level {lvl.index + 1}</p>
+            <p className="font-display text-xl font-bold">{lvl.name}</p>
+            <ProgressBar value={lvl.pct} tone="bg-secondary" className="mt-2" />
+          </div>
+        </Card>
+        <Card className="flex items-center gap-4">
+          <div className="grid size-14 place-items-center rounded-2xl bg-accent-soft">
+            <Flame className="size-7 text-accent" />
+          </div>
+          <div>
+            <p className="text-sm font-bold text-ink-soft">Daily streak</p>
+            <p className="font-display text-xl font-bold">{p.streak.current || 0} days</p>
+            <p className="text-sm text-ink-soft">Best: {p.streak.best} days</p>
+          </div>
+        </Card>
+        <Card className="flex items-center gap-4">
+          <div className="grid size-14 place-items-center rounded-2xl bg-success-soft">
+            <MapIcon className="size-7 text-success" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="text-sm font-bold text-ink-soft">Tamil Nadu districts</p>
+            <p className="font-display text-xl font-bold">
+              {tnLearned} / {tnTotal} learned
+            </p>
+            <ProgressBar value={tnLearned / tnTotal} tone="bg-success" className="mt-2" />
+          </div>
+        </Card>
+      </section>
+
+      <section>
+        <h2 className="mb-3 text-2xl font-bold">Where to next?</h2>
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+          {SECTIONS.map(({ href, title, text, icon: Icon, bg, fg }) => (
+            <Link key={href} href={href} className="group rounded-[var(--radius-card)] bg-white p-5 shadow-[var(--shadow-card)] transition hover:-translate-y-1">
+              <div className={`mb-3 grid size-14 place-items-center rounded-2xl ${bg}`}>
+                <Icon className={`size-7 ${fg}`} />
+              </div>
+              <h3 className="text-xl font-bold">{title}</h3>
+              <p className="text-ink-soft">{text}</p>
+            </Link>
+          ))}
         </div>
-      </main>
+      </section>
+
+      <section>
+        <div className="mb-3 flex items-end justify-between">
+          <h2 className="text-2xl font-bold">Mini games</h2>
+          <Link href="/games" className="font-display font-bold text-primary">
+            See all
+          </Link>
+        </div>
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+          {GAMES.map((g) => (
+            <Link key={g.id} href={g.href} className="rounded-[var(--radius-card)] bg-white p-4 shadow-[var(--shadow-card)] transition hover:-translate-y-1">
+              <div className="mb-2 grid size-12 place-items-center rounded-2xl" style={{ background: g.bg }}>
+                <g.icon className="size-6" style={{ color: g.fg }} />
+              </div>
+              <h3 className="text-lg font-bold leading-tight">{g.title}</h3>
+              <p className="text-sm text-ink-soft">{g.blurb}</p>
+            </Link>
+          ))}
+        </div>
+      </section>
     </div>
   );
 }

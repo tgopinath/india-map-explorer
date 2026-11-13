@@ -39,3 +39,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+/data-raw/*.geojsonl
+/data-raw/*.7z
+!.env.example
