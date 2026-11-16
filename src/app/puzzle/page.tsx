@@ -3,10 +3,10 @@
 import Link from "next/link";
 import { Globe2 } from "lucide-react";
 import { Mascot } from "@/components/Mascot";
-import { ContinentLocator, IndiaColoured, IndiaOutlineDefs, StateLocator, WorldOutlineDefs } from "@/components/StateLocator";
+import { ContinentLocator, DistrictPreview, IndiaColoured, IndiaOutlineDefs, StateLocator, WorldOutlineDefs } from "@/components/StateLocator";
 import { DataStatusBadge, PageHeader, ShowMore, SpeakButton, Stars } from "@/components/ui";
 import { PILOT_STATE, REGION_COLOURS, STATES, districtsLabel, getState } from "@/lib/content";
-import { STATE_FILLS, useIndiaMap, useWorldMap } from "@/lib/geo";
+import { DISTRICT_FILLS, STATE_FILLS, useIndiaMap, useWorldMap } from "@/lib/geo";
 import { useProgress, type Progress } from "@/lib/progress";
 import { speak, speakLocal } from "@/lib/speech";
 import { CONTINENT_BOX, CONTINENTS, countriesIn, getCountry } from "@/lib/world";
@@ -37,7 +37,7 @@ export default function PuzzleHub() {
             <div className="flex shrink-0 items-center">
               <Mascot mood="cheer" size={72} />
               <div className="rounded-3xl bg-white/85 p-1.5">
-                {india.features ? <StateLocator id={pilot.id} features={india.features} colour="#356ae6" size={72} /> : <div className="h-20 w-[72px]" />}
+                <DistrictPreview stateId={pilot.id} fills={DISTRICT_FILLS} size={80} />
               </div>
             </div>
             <div>
@@ -102,9 +102,14 @@ export default function PuzzleHub() {
         className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3"
         render={(s) => (
           <div key={s.id} className="relative">
-            <Link href={`/puzzle/${s.id}`} className="flex h-full items-center gap-3 rounded-3xl bg-white p-3 pr-16 shadow-[var(--shadow-card)] transition hover:-translate-y-0.5">
-              <div className="grid shrink-0 place-items-center rounded-2xl p-1" style={{ background: `${REGION_COLOURS[s.region]}55` }}>
-                {india.features ? <StateLocator id={s.id} features={india.features} colour={s.type === "ut" ? "#ff6a33" : "#356ae6"} size={64} /> : <div className="h-[72px] w-16" />}
+            <Link href={`/puzzle/${s.id}`} className="flex h-full items-center gap-4 rounded-3xl bg-white p-3 pr-16 shadow-[var(--shadow-card)] transition hover:-translate-y-0.5">
+              <div className="relative grid shrink-0 place-items-center rounded-2xl p-1.5" style={{ background: `${REGION_COLOURS[s.region]}55` }}>
+                <DistrictPreview stateId={s.id} fills={DISTRICT_FILLS} size={84} />
+                {india.features && (
+                  <span className="absolute -bottom-1 -right-1 rounded-lg bg-white p-0.5 shadow">
+                    <StateLocator id={s.id} features={india.features} colour={s.type === "ut" ? "#ff6a33" : "#356ae6"} size={26} />
+                  </span>
+                )}
               </div>
               <div className="min-w-0 flex-1">
                 <h3 className="text-lg font-bold leading-tight">{s.name}</h3>
