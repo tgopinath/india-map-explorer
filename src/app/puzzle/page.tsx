@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { Globe2 } from "lucide-react";
-import { Mascot } from "@/components/Mascot";
 import { ContinentLocator, DistrictPreview, IndiaColoured, IndiaOutlineDefs, StateLocator, WorldOutlineDefs } from "@/components/StateLocator";
 import { DataStatusBadge, PageHeader, ShowMore, SpeakButton, Stars } from "@/components/ui";
 import { PILOT_STATE, REGION_COLOURS, STATES, districtsLabel, getState } from "@/lib/content";
@@ -35,7 +34,6 @@ export default function PuzzleHub() {
         <div className="relative">
           <Link href={`/puzzle/${PILOT_STATE}`} className="flex h-full items-center gap-4 rounded-[2rem] bg-accent p-6 pr-20 text-white shadow-[var(--shadow-card)] transition hover:-translate-y-1">
             <div className="flex shrink-0 items-center">
-              <Mascot mood="cheer" size={72} />
               <div className="rounded-3xl bg-white/85 p-1.5">
                 <DistrictPreview stateId={pilot.id} fills={DISTRICT_FILLS} size={80} />
               </div>
