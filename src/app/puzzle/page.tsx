@@ -4,7 +4,7 @@ import Link from "next/link";
 import { Globe2, Puzzle } from "lucide-react";
 import { Mascot } from "@/components/Mascot";
 import { DataStatusBadge, PageHeader, ShowMore, Stars } from "@/components/ui";
-import { PILOT_STATE, STATES } from "@/lib/content";
+import { PILOT_STATE, STATES, districtsLabel } from "@/lib/content";
 import { useProgress, type Progress } from "@/lib/progress";
 import { CONTINENT_BOX, CONTINENTS, countriesIn } from "@/lib/world";
 
@@ -69,7 +69,7 @@ export default function PuzzleHub() {
             <div className="flex items-start justify-between gap-2">
               <div>
                 <h3 className="text-lg font-bold leading-tight">{s.name}</h3>
-                <p className="text-sm text-ink-soft">{s.districtCount} districts</p>
+                <p className="text-sm text-ink-soft">{districtsLabel(s.districtCount)}</p>
               </div>
               <Stars count={best(p, s.id)} size="size-5" />
             </div>

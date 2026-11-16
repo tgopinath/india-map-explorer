@@ -2,15 +2,26 @@
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
-import { Check, Search } from "lucide-react";
+import { Check, Search, Volume2 } from "lucide-react";
+import { IndiaOutlineDefs, StateLocator } from "@/components/StateLocator";
 import { Chip, PageHeader, ShowMore } from "@/components/ui";
-import { REGION_COLOURS, STATES, type Region } from "@/lib/content";
+import { REGION_COLOURS, STATES, type Region, type StateInfo, districtsLabel } from "@/lib/content";
+import { useIndiaMap } from "@/lib/geo";
+import { speakLocal } from "@/lib/speech";
 import { useProgress } from "@/lib/progress";
 
 const REGIONS = Object.keys(REGION_COLOURS) as Region[];
 
+const sayState = (s: StateInfo) =>
+  speakLocal(
+    `${s.name}. Its capital is ${s.capital.replace(/\s*\(([^)]*)\)/g, " in $1")}.`,
+    s.ta && `${s.ta.name}. இதன் தலைநகரம் ${s.ta.capital}.`,
+    { force: true },
+  );
+
 export default function StatesPage() {
   const p = useProgress();
+  const { features } = useIndiaMap();
   const [q, setQ] = useState("");
   const [region, setRegion] = useState<Region | "all">("all");
   const [type, setType] = useState<"all" | "state" | "ut">("all");
@@ -61,36 +72,57 @@ export default function StatesPage() {
         </div>
       </div>
 
+      {features && <IndiaOutlineDefs features={features} />}
       <ShowMore
         key={`${q}|${region}|${type}`}
         items={list}
         initial={q || region !== "all" || type !== "all" ? list.length : 9}
         noun="states"
-        className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3"
+        className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3"
         render={(s) => {
           const seen = p.statesViewed.includes(s.id);
+          const tint = REGION_COLOURS[s.region];
           return (
-            <Link
-              key={s.id}
-              href={`/states/${s.id}`}
-              className="relative overflow-hidden rounded-[var(--radius-card)] bg-white p-5 shadow-[var(--shadow-card)] transition hover:-translate-y-1"
-            >
-              <span className="absolute inset-y-0 left-0 w-2" style={{ background: REGION_COLOURS[s.region] }} />
-              <div className="flex items-start justify-between gap-2">
-                <h2 className="text-xl font-bold leading-tight">{s.name}</h2>
-                {seen && (
-                  <span className="grid size-7 shrink-0 place-items-center rounded-full bg-success text-white" title="Explored">
-                    <Check className="size-4" />
-                  </span>
-                )}
-              </div>
-              <p className="mt-1 text-ink-soft">Capital: <b className="text-ink">{s.capital}</b></p>
-              <div className="mt-3 flex flex-wrap gap-2">
-                <Chip className={s.type === "ut" ? "bg-accent-soft text-[#b4471c]" : "bg-primary-soft text-primary"}>{s.type === "ut" ? "UT" : "State"}</Chip>
-                <Chip className="bg-bg text-ink-soft">{s.districtCount} districts</Chip>
-                <Chip className="bg-bg text-ink-soft">{s.region}</Chip>
-              </div>
-            </Link>
+            <div key={s.id} className="relative">
+              <Link
+                href={`/states/${s.id}`}
+                aria-label={`${s.name}, capital ${s.capital}`}
+                className="flex h-full flex-col overflow-hidden rounded-[var(--radius-card)] bg-white shadow-[var(--shadow-card)] transition hover:-translate-y-1"
+              >
+                <div className="grid h-36 place-items-center" style={{ background: `${tint}55` }}>
+                  {features ? (
+                    <StateLocator id={s.id} features={features} colour={s.type === "ut" ? "#ff6a33" : "#356ae6"} size={112} />
+                  ) : (
+                    <div className="h-[125px] w-[112px]" />
+                  )}
+                </div>
+                <div className="flex flex-1 flex-col p-4">
+                  <h2 className="text-xl font-bold leading-tight">{s.name}</h2>
+                  {s.ta && <p lang="ta" className="font-display text-base font-semibold text-primary">{s.ta.name}</p>}
+                  <p className="mt-1 text-ink-soft">Capital: <b className="text-ink">{s.capital}</b></p>
+                  <div className="mt-auto flex flex-wrap gap-1.5 pt-3">
+                    <Chip className={s.type === "ut" ? "bg-accent-soft text-[#b4471c]" : "bg-primary-soft text-primary"}>{s.type === "ut" ? "UT" : "State"}</Chip>
+                    <Chip className="bg-bg text-ink-soft">{districtsLabel(s.districtCount)}</Chip>
+                    <Chip className="bg-bg text-ink-soft">{s.region}</Chip>
+                  </div>
+                </div>
+              </Link>
+              <button
+                type="button"
+                onClick={() => sayState(s)}
+                aria-label={`Hear ${s.name}`}
+                title={`Hear ${s.name}`}
+                data-no-announce
+                className="absolute right-3 top-3 grid size-12 place-items-center rounded-full bg-primary text-white shadow-[0_3px_0_#2450bd] transition active:translate-y-px"
+              >
+                <Volume2 className="size-6" />
+              </button>
+              {seen && (
+                <span className="absolute left-3 top-3 grid size-8 place-items-center rounded-full bg-success text-white" title="Explored" aria-label="Explored">
+                  <Check className="size-4" />
+                </span>
+              )}
+            </div>
           );
         }}
       />

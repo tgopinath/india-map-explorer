@@ -6,7 +6,7 @@ import { ArrowLeft, Check, Volume2, ChevronLeft, ChevronRight, Building2, Gradua
 import MapView from "@/components/MapView";
 import { Mascot, MascotSays } from "@/components/Mascot";
 import { Button, Card, DataStatusBadge, LinkButton, Loading, PageHeader, ProgressBar, ShowMore } from "@/components/ui";
-import { getDistricts, getState } from "@/lib/content";
+import { getDistricts, getState, districtsLabel } from "@/lib/content";
 import { DISTRICT_FILLS, useDistrictMap } from "@/lib/geo";
 import { actions, useProgress } from "@/lib/progress";
 import { speakLocal } from "@/lib/speech";
@@ -59,7 +59,7 @@ export default function DistrictExplorer({ id }: { id: string }) {
         title={`${s.name} districts`}
         subtitle={
           <span className="flex flex-wrap items-center gap-2">
-            {s.districtCount} districts · {done} learned <DataStatusBadge status={s.dataStatus} issues={s.issues} />
+            {districtsLabel(s.districtCount)} · {done} learned <DataStatusBadge status={s.dataStatus} issues={s.issues} />
           </span>
         }
       >

@@ -133,3 +133,6 @@ export function shuffle<T>(arr: T[]): T[] {
 }
 
 export const sample = <T,>(arr: T[], n: number) => shuffle(arr).slice(0, n);
+
+/** "1 district" / "38 districts" */
+export const districtsLabel = (n: number) => `${n} ${n === 1 ? "district" : "districts"}`;

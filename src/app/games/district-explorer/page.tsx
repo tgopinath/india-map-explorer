@@ -5,7 +5,7 @@ import QuizRunner from "@/components/QuizRunner";
 import { BackLink } from "@/components/games/BackLink";
 import { MascotSays } from "@/components/Mascot";
 import { Button, Card, DataStatusBadge, PageHeader } from "@/components/ui";
-import { getState, PILOT_STATE, STATES, stateName } from "@/lib/content";
+import { getState, PILOT_STATE, STATES, stateName, districtsLabel } from "@/lib/content";
 import { districtTapQs } from "@/lib/questions";
 import { actions } from "@/lib/progress";
 
@@ -34,7 +34,7 @@ export default function DistrictExplorerGame() {
           <select value={stateId} onChange={(e) => setStateId(e.target.value)} className="w-full rounded-2xl border-2 border-line bg-white px-4 py-3 text-lg font-semibold">
             {PLAYABLE.map((x) => (
               <option key={x.id} value={x.id}>
-                {x.name} ({x.districtCount} districts)
+                {x.name} ({districtsLabel(x.districtCount)})
               </option>
             ))}
           </select>

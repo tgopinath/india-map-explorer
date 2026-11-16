@@ -23,7 +23,7 @@ function heading(id: string) {
   if (cont && CONTINENT_BOX[cont.id])
     return { title: `${cont.id} Puzzle`, subtitle: `Put the ${countriesIn(cont.id).length} countries and territories of ${cont.id} in the right place.` };
   const s = getState(id);
-  if (s) return { title: `${s.name} District Challenge`, subtitle: `Put all ${s.districtCount} districts in the right place.` };
+  if (s) return { title: `${s.name} District Challenge`, subtitle: s.districtCount === 1 ? "Put its district in the right place." : `Put all ${s.districtCount} districts in the right place.` };
   return null;
 }
 
