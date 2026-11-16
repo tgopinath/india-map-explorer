@@ -94,18 +94,20 @@ export default function WorldPage() {
             )}
           </div>
           <MapModeSwitch mode={mapMode} onChange={setMapMode} />
-          <div className="flex rounded-2xl bg-white p-1 shadow-[var(--shadow-card)]">
-            {(["continent", "country"] as const).map((k) => (
-              <button
-                key={k}
-                type="button"
-                onClick={() => setColourBy(k)}
-                className={`rounded-xl px-4 py-2 font-display font-semibold ${colourBy === k ? "bg-primary text-white" : "text-ink-soft"}`}
-              >
-                {k === "continent" ? "By continent" : "Colourful"}
-              </button>
-            ))}
-          </div>
+          {mapMode === "drawn" && (
+            <div className="flex rounded-2xl bg-white p-1 shadow-[var(--shadow-card)]">
+              {(["continent", "country"] as const).map((k) => (
+                <button
+                  key={k}
+                  type="button"
+                  onClick={() => setColourBy(k)}
+                  className={`rounded-xl px-4 py-2 font-display font-semibold ${colourBy === k ? "bg-primary text-white" : "text-ink-soft"}`}
+                >
+                  {k === "continent" ? "By continent" : "Colourful"}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
       </PageHeader>
 
