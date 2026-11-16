@@ -107,24 +107,50 @@ export function Chip({ children, className = "" }: { children: ReactNode; classN
   );
 }
 
-/** Tells kids and parents how trustworthy a map is. */
-export function DataStatusBadge({ status, issues = [] }: { status: DataStatus; issues?: string[] }) {
-  if (status === "verified")
+/**
+ * Tells kids and parents how trustworthy a map is. Minimal by default (a small icon chip);
+ * hover, focus or tap shows the full message. Pass `full` to always show the words.
+ */
+export function DataStatusBadge({ status, issues = [], full = false }: { status: DataStatus; issues?: string[]; full?: boolean }) {
+  const [open, setOpen] = useState(false);
+  const v =
+    status === "verified"
+      ? { Icon: BadgeCheck, short: "Verified", label: "Verified map", detail: "District list checked against the state's current list.", cls: "bg-success-soft text-[#1d7a52]" }
+      : status === "issues"
+        ? { Icon: AlertTriangle, short: "Update", label: "Map data needs update", detail: issues.join(" "), cls: "bg-danger-soft text-[#a8262b]" }
+        : { Icon: Info, short: "2023", label: "LGD 2023 map · review pending", detail: "Official LGD boundaries, December 2023 snapshot. Not yet reviewed against the latest district list.", cls: "bg-secondary-soft text-[#8a5b00]" };
+  if (full)
     return (
-      <Chip className="bg-success-soft text-[#1d7a52]">
-        <BadgeCheck className="size-4" /> Verified map
-      </Chip>
-    );
-  if (status === "issues")
-    return (
-      <Chip className="bg-danger-soft text-[#a8262b]">
-        <AlertTriangle className="size-4" /> <span title={issues.join(" ")}>Map data needs update</span>
+      <Chip className={v.cls}>
+        <v.Icon className="size-4" /> <span title={v.detail}>{v.label}</span>
       </Chip>
     );
   return (
-    <Chip className="bg-secondary-soft text-[#8a5b00]">
-      <Info className="size-4" /> <span title="Official LGD boundaries, December 2023 snapshot. Not yet reviewed against the latest district list.">LGD 2023 map · review pending</span>
-    </Chip>
+    <span className="group relative inline-flex">
+      <button
+        type="button"
+        aria-label={`${v.label}. ${v.detail}`}
+        aria-expanded={open}
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          setOpen(!open);
+        }}
+        onBlur={() => setOpen(false)}
+        className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-bold ${v.cls}`}
+      >
+        <v.Icon className="size-3.5" /> {v.short}
+      </button>
+      <span
+        role="tooltip"
+        className={`pointer-events-none absolute bottom-full left-0 z-30 mb-2 w-60 rounded-2xl bg-ink px-3 py-2 text-sm font-semibold leading-snug text-white shadow-lg transition ${
+          open ? "opacity-100" : "opacity-0 group-hover:opacity-100 group-focus-within:opacity-100"
+        }`}
+      >
+        <b className="block">{v.label}</b>
+        <span className="font-normal text-white/85">{v.detail}</span>
+      </span>
+    </span>
   );
 }
 

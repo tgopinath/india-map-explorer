@@ -90,7 +90,7 @@ export default function StatesPage() {
                 aria-label={`${s.name}, capital ${s.capital}`}
                 className="flex h-full flex-col overflow-hidden rounded-[var(--radius-card)] bg-white shadow-[var(--shadow-card)] transition hover:-translate-y-1"
               >
-                <div className="grid h-36 place-items-center" style={{ background: `${tint}55` }}>
+                <div className="grid h-36 place-items-center" style={{ background: `${tint}b0` }}>
                   {features ? (
                     <StateLocator id={s.id} features={features} colour={s.type === "ut" ? "#ff6a33" : "#356ae6"} size={112} />
                   ) : (

@@ -48,7 +48,7 @@ export default function DistrictsHome() {
         className="flex flex-col gap-4 overflow-hidden rounded-[2rem] bg-secondary p-6 pr-20 shadow-[var(--shadow-card)] transition hover:-translate-y-1 sm:flex-row sm:items-center"
       >
         <div className="flex items-center gap-2">
-          <div className="rounded-3xl bg-white/70 p-2">
+          <div className="rounded-3xl bg-white p-2 shadow-sm">
             <DistrictPreview stateId={pilot.id} fills={DISTRICT_FILLS} size={96} />
           </div>
         </div>
@@ -81,7 +81,7 @@ export default function DistrictsHome() {
               aria-label={`${s.name}, ${districtsLabel(s.districtCount)}`}
               className="flex h-full items-center gap-4 rounded-3xl bg-white p-3 pr-16 shadow-[var(--shadow-card)] transition hover:-translate-y-0.5"
             >
-              <div className="relative grid shrink-0 place-items-center rounded-2xl p-1.5" style={{ background: `${REGION_COLOURS[s.region]}55` }}>
+              <div className="relative grid shrink-0 place-items-center rounded-2xl p-1.5" style={{ background: `${REGION_COLOURS[s.region]}b0` }}>
                 <DistrictPreview stateId={s.id} fills={DISTRICT_FILLS} size={84} />
                 {features && (
                   <span className="absolute -bottom-1 -right-1 rounded-lg bg-white p-0.5 shadow">

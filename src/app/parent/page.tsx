@@ -180,9 +180,9 @@ export default function ParentPage() {
           Other states show the LGD snapshot and may not include districts created or merged after it.
         </p>
         <div className="flex flex-wrap gap-2">
-          <DataStatusBadge status="verified" />
-          <DataStatusBadge status="snapshot" />
-          <DataStatusBadge status="issues" issues={STATES.filter((s) => s.dataStatus === "issues").flatMap((s) => s.issues)} />
+          <DataStatusBadge status="verified" full />
+          <DataStatusBadge status="snapshot" full />
+          <DataStatusBadge full status="issues" issues={STATES.filter((s) => s.dataStatus === "issues").flatMap((s) => s.issues)} />
         </div>
         <p className="text-sm text-ink-soft">
           Needs update: {STATES.filter((s) => s.dataStatus === "issues").map((s) => `${s.name} — ${s.issues.join(" ")}`).join(" ") || "none"}

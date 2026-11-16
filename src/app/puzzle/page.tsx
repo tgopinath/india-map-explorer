@@ -34,7 +34,7 @@ export default function PuzzleHub() {
         <div className="relative">
           <Link href={`/puzzle/${PILOT_STATE}`} className="flex h-full items-center gap-4 rounded-[2rem] bg-accent p-6 pr-20 text-white shadow-[var(--shadow-card)] transition hover:-translate-y-1">
             <div className="flex shrink-0 items-center">
-              <div className="rounded-3xl bg-white/85 p-1.5">
+              <div className="rounded-3xl bg-white p-1.5 shadow-sm">
                 <DistrictPreview stateId={pilot.id} fills={DISTRICT_FILLS} size={80} />
               </div>
             </div>
@@ -49,7 +49,7 @@ export default function PuzzleHub() {
         </div>
         <div className="relative">
           <Link href="/puzzle/india" className="flex h-full items-center gap-4 rounded-[2rem] bg-primary p-6 pr-20 text-white shadow-[var(--shadow-card)] transition hover:-translate-y-1">
-            <div className="grid shrink-0 place-items-center rounded-3xl bg-white/90 p-2">
+            <div className="grid shrink-0 place-items-center rounded-3xl bg-white p-2 shadow-sm">
               {india.features ? <IndiaColoured features={india.features} fills={STATE_FILLS} size={80} /> : <div className="h-[90px] w-20" />}
             </div>
             <div>
@@ -75,7 +75,7 @@ export default function PuzzleHub() {
         {CONTINENTS.filter((c) => CONTINENT_BOX[c.id]).map((c) => (
           <div key={c.id} className="relative">
             <Link href={`/puzzle/world-${c.slug}`} className="flex h-full flex-col overflow-hidden rounded-3xl bg-white shadow-[var(--shadow-card)] transition hover:-translate-y-0.5">
-              <div className="grid h-28 place-items-center" style={{ background: `${c.colour}55` }}>
+              <div className="grid h-28 place-items-center" style={{ background: `${c.colour}b0` }}>
                 {world.features ? <ContinentLocator continent={c.id} features={world.features} continentOf={continentOf} colour="#356ae6" size={170} /> : <div className="h-[90px] w-[170px]" />}
               </div>
               <div className="p-4">
@@ -101,7 +101,7 @@ export default function PuzzleHub() {
         render={(s) => (
           <div key={s.id} className="relative">
             <Link href={`/puzzle/${s.id}`} className="flex h-full items-center gap-4 rounded-3xl bg-white p-3 pr-16 shadow-[var(--shadow-card)] transition hover:-translate-y-0.5">
-              <div className="relative grid shrink-0 place-items-center rounded-2xl p-1.5" style={{ background: `${REGION_COLOURS[s.region]}55` }}>
+              <div className="relative grid shrink-0 place-items-center rounded-2xl p-1.5" style={{ background: `${REGION_COLOURS[s.region]}b0` }}>
                 <DistrictPreview stateId={s.id} fills={DISTRICT_FILLS} size={84} />
                 {india.features && (
                   <span className="absolute -bottom-1 -right-1 rounded-lg bg-white p-0.5 shadow">
