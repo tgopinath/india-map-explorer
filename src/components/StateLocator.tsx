@@ -37,20 +37,20 @@ export function IndiaOutlineDefs({ features }: { features: RegionFeature[] }) {
 }
 
 /** A small map of India with one state or UT highlighted, so children can see where it is. */
-export function StateLocator({ id, features, colour, size = 84, also = [], alsoColour = "#36b37e" }: { id: string; features: RegionFeature[]; colour: string; size?: number; also?: string[]; alsoColour?: string }) {
+export function StateLocator({ id, features, colour, size = 84, also = [], alsoColour = "#36b37e", bold = false }: { id: string; features: RegionFeature[]; colour: string; size?: number; also?: string[]; alsoColour?: string; bold?: boolean }) {
   const { byId } = useMemo(() => project(features), [features]);
   const s = byId.get(id);
   return (
     <svg viewBox={`0 0 ${W} ${H}`} width={size} height={(size * H) / W} aria-hidden className="shrink-0">
-      <use href="#imx-india-outline" fill="#ffffff" stroke="#c3cde0" strokeWidth={0.35} />
+      <use href="#imx-india-outline" fill="#ffffff" stroke={bold ? "#8f9bb3" : "#c3cde0"} strokeWidth={bold ? 1.2 : 0.35} />
       {also.map((x) => (
         <path key={x} d={byId.get(x)?.d} fill={alsoColour} stroke="#ffffff" strokeWidth={0.4} />
       ))}
-      {s && <path d={s.d} fill={colour} stroke="#1f2a44" strokeWidth={0.6} strokeLinejoin="round" />}
+      {s && <path d={s.d} fill={colour} stroke="#1f2a44" strokeWidth={bold ? 1.4 : 0.6} strokeLinejoin="round" />}
       {s?.tiny && (
         <>
-          <circle cx={s.x} cy={s.y} r={6} fill="none" stroke="#ff8b5c" strokeWidth={1.6} />
-          <circle cx={s.x} cy={s.y} r={2.4} fill="#ff8b5c" />
+          <circle cx={s.x} cy={s.y} r={bold ? 12 : 6} fill="none" stroke={bold ? colour : "#ff8b5c"} strokeWidth={bold ? 3 : 1.6} />
+          <circle cx={s.x} cy={s.y} r={bold ? 5 : 2.4} fill={bold ? colour : "#ff8b5c"} />
         </>
       )}
     </svg>

@@ -104,8 +104,8 @@ export default function PuzzleHub() {
               <div className="relative grid shrink-0 place-items-center rounded-2xl p-1.5" style={{ background: `${REGION_COLOURS[s.region]}e0` }}>
                 <DistrictPreview stateId={s.id} fills={DISTRICT_FILLS} size={84} />
                 {india.features && (
-                  <span className="absolute -bottom-1 -right-1 rounded-lg bg-white p-0.5 shadow">
-                    <StateLocator id={s.id} features={india.features} colour={s.type === "ut" ? "#ff6a33" : "#356ae6"} size={26} />
+                  <span className="absolute -bottom-2 -right-2 rounded-xl border-2 border-white bg-[#eef2f9] p-1 shadow-md">
+                    <StateLocator id={s.id} features={india.features} colour="#e5484d" size={38} bold />
                   </span>
                 )}
               </div>
