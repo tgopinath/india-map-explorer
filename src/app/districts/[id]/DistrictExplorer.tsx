@@ -193,28 +193,33 @@ export default function DistrictExplorer({ id }: { id: string }) {
                 items={list}
                 initial={q ? list.length : 10}
                 noun="districts"
-                className="space-y-1"
+                className="space-y-2"
                 render={(x) => (
-                <li key={x.id} className="flex items-center gap-1">
-                  <button
-                    type="button"
-                    aria-label={`Say ${x.name}`}
-                    data-no-announce
-                    title={`Say ${x.name}`}
-                    onClick={() => speakLocal(x.name, x.ta?.name, { force: true })}
-                    className="grid size-9 shrink-0 place-items-center rounded-full text-primary hover:bg-primary-soft"
-                  >
-                    <Volume2 className="size-4" />
-                  </button>
+                <li
+                  key={x.id}
+                  className={`flex items-center gap-2 rounded-2xl border-2 p-1.5 pl-1 transition ${
+                    x.id === selected ? "border-primary bg-primary text-white" : "border-line bg-white hover:border-primary/40"
+                  }`}
+                >
                   <button
                     type="button"
                     onClick={() => select(x.id)}
-                    className={`flex flex-1 items-center justify-between rounded-xl px-3 py-2 text-left font-semibold transition ${
-                      x.id === selected ? "bg-primary text-white" : "hover:bg-primary-soft"
-                    }`}
+                    className="flex flex-1 items-center gap-2 rounded-xl px-3 py-1.5 text-left font-display text-[17px] font-bold"
                   >
                     {x.name}
-                    {learned.has(x.id) && <Check className={`size-4 ${x.id === selected ? "text-white" : "text-success"}`} />}
+                    {learned.has(x.id) && <Check className={`size-4 ${x.id === selected ? "text-white" : "text-success"}`} strokeWidth={3} />}
+                  </button>
+                  <button
+                    type="button"
+                    aria-label={`Say ${x.name}`}
+                    title={`Say ${x.name}`}
+                    data-no-announce
+                    onClick={() => speakLocal(x.name, x.ta?.name, { force: true })}
+                    className={`grid size-9 shrink-0 place-items-center rounded-full transition ${
+                      x.id === selected ? "bg-white/25 text-white" : "bg-primary-soft text-primary hover:bg-primary hover:text-white"
+                    }`}
+                  >
+                    <Volume2 className="size-5" />
                   </button>
                 </li>
                 )}
