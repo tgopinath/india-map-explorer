@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { ArrowRight, Star } from "lucide-react";
 import { Mascot } from "@/components/Mascot";
-import { DataStatusBadge, PageHeader, ProgressBar } from "@/components/ui";
+import { DataStatusBadge, PageHeader, ProgressBar, ShowMore } from "@/components/ui";
 import { getState, PILOT_STATE, STATES } from "@/lib/content";
 import { useProgress } from "@/lib/progress";
 
@@ -36,8 +36,12 @@ export default function DistrictsHome() {
       </Link>
 
       <h2 className="mb-3 text-2xl font-bold">All states & Union Territories</h2>
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-        {STATES.filter((s) => s.id !== PILOT_STATE).map((s) => (
+      <ShowMore
+        items={STATES.filter((s) => s.id !== PILOT_STATE)}
+        initial={6}
+        noun="states"
+        className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3"
+        render={(s) => (
           <Link key={s.id} href={`/districts/${s.id}`} className="rounded-3xl bg-white p-4 shadow-[var(--shadow-card)] transition hover:-translate-y-0.5">
             <div className="flex items-baseline justify-between gap-2">
               <h3 className="text-lg font-bold leading-tight">{s.name}</h3>
@@ -48,8 +52,8 @@ export default function DistrictsHome() {
               {learned(s.id) > 0 && <span className="text-sm font-bold text-success">{learned(s.id)} learned</span>}
             </div>
           </Link>
-        ))}
-      </div>
+        )}
+      />
     </div>
   );
 }

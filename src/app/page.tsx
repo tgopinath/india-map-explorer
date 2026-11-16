@@ -1,9 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowRight, BookOpen, Compass, Flame, Map as MapIcon, Puzzle, Star, Trophy } from "lucide-react";
+import { ArrowRight, BookOpen, Compass, Flame, Globe2, Map as MapIcon, Puzzle, Star, Trophy } from "lucide-react";
 import { Mascot } from "@/components/Mascot";
-import { Card, LinkButton, ProgressBar } from "@/components/ui";
+import { Card, LinkButton, ProgressBar, ShowMore } from "@/components/ui";
 import { GAMES } from "@/components/games/registry";
 import { getDistricts, PILOT_STATE, STATE_COUNT, UT_COUNT } from "@/lib/content";
 import { levelFor, useProgress } from "@/lib/progress";
@@ -13,6 +13,7 @@ const SECTIONS = [
   { href: "/states", title: "Learn States", text: "Capitals, languages & fun facts", icon: BookOpen, bg: "bg-success-soft", fg: "text-success" },
   { href: "/districts/tamil-nadu", title: "Learn Districts", text: "Discover all 38 districts of Tamil Nadu", icon: MapIcon, bg: "bg-secondary-soft", fg: "text-[#c58a00]" },
   { href: "/puzzle", title: "Map Puzzle", text: "Drag names to the right place", icon: Puzzle, bg: "bg-accent-soft", fg: "text-accent" },
+  { href: "/world", title: "World Map", text: "Visit countries on every continent", icon: Globe2, bg: "bg-[#e0f4f1]", fg: "text-[#1f8a7a]" },
   { href: "/quiz", title: "Quiz Challenge", text: "Beginner to Advanced", icon: Trophy, bg: "bg-[#efe8fd]", fg: "text-[#7b55e0]" },
 ];
 
@@ -87,7 +88,7 @@ export default function Home() {
 
       <section>
         <h2 className="mb-3 text-2xl font-bold">Where to next?</h2>
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {SECTIONS.map(({ href, title, text, icon: Icon, bg, fg }) => (
             <Link key={href} href={href} className="group rounded-[var(--radius-card)] bg-white p-5 shadow-[var(--shadow-card)] transition hover:-translate-y-1">
               <div className={`mb-3 grid size-14 place-items-center rounded-2xl ${bg}`}>
@@ -107,8 +108,12 @@ export default function Home() {
             See all
           </Link>
         </div>
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
-          {GAMES.map((g) => (
+        <ShowMore
+          items={[...GAMES]}
+          initial={3}
+          noun="games"
+          className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3"
+          render={(g) => (
             <Link key={g.id} href={g.href} className="rounded-[var(--radius-card)] bg-white p-4 shadow-[var(--shadow-card)] transition hover:-translate-y-1">
               <div className="mb-2 grid size-12 place-items-center rounded-2xl" style={{ background: g.bg }}>
                 <g.icon className="size-6" style={{ color: g.fg }} />
@@ -116,8 +121,8 @@ export default function Home() {
               <h3 className="text-lg font-bold leading-tight">{g.title}</h3>
               <p className="text-sm text-ink-soft">{g.blurb}</p>
             </Link>
-          ))}
-        </div>
+          )}
+        />
       </section>
     </div>
   );

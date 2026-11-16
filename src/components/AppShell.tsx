@@ -3,16 +3,17 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState, type ReactNode } from "react";
-import { Award, BookOpen, Compass, Flame, Home, LayoutGrid, Map as MapIcon, MoreHorizontal, Puzzle, Trophy, Users, Volume2, VolumeX, X } from "lucide-react";
+import { Award, BookOpen, Compass, Globe2, Flame, Home, LayoutGrid, Map as MapIcon, MoreHorizontal, Puzzle, Trophy, Users, Volume2, VolumeX, X } from "lucide-react";
 import { actions, BADGES, onBadgeEarned, useProgress } from "@/lib/progress";
 import { startSync } from "@/lib/sync";
 import { celebrate } from "@/lib/celebrate";
-import { hasTamilVoice, speak, stopSpeaking } from "@/lib/speech";
+import { announceTap, hasTamilVoice, speak, stopSpeaking } from "@/lib/speech";
 import { Mascot } from "./Mascot";
 
 const NAV = [
   { href: "/", label: "Home", icon: Home },
   { href: "/explore", label: "Explore India", short: "Explore", icon: Compass },
+  { href: "/world", label: "World Map", short: "World", icon: Globe2 },
   { href: "/states", label: "Learn States", short: "States", icon: BookOpen },
   { href: "/districts", label: "Learn Districts", short: "Districts", icon: MapIcon },
   { href: "/puzzle", label: "Map Puzzle", short: "Puzzle", icon: Puzzle },
@@ -42,6 +43,13 @@ export default function AppShell({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => startSync(), []);
+
+  // Read out whatever is tapped, for children who can't read yet.
+  useEffect(() => {
+    const onTap = (e: MouseEvent) => announceTap(e.target);
+    document.addEventListener("click", onTap, true);
+    return () => document.removeEventListener("click", onTap, true);
+  }, []);
 
   useEffect(
     () =>

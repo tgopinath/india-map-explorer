@@ -42,3 +42,4 @@ next-env.d.ts
 /data-raw/*.geojsonl
 /data-raw/*.7z
 !.env.example
+/data-raw/world/

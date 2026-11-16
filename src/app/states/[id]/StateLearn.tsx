@@ -5,7 +5,7 @@ import { useEffect } from "react";
 import { ArrowLeft, ArrowRight, Camera, Landmark, Languages, Lightbulb, Map as MapIcon, Puzzle, Users } from "lucide-react";
 import MapView from "@/components/MapView";
 import { MascotSays } from "@/components/Mascot";
-import { Card, Chip, DataStatusBadge, LinkButton, Loading } from "@/components/ui";
+import { Card, Chip, DataStatusBadge, LinkButton, Loading, ShowMore } from "@/components/ui";
 import { getState, REGION_COLOURS, stateName } from "@/lib/content";
 import { useDistrictMap } from "@/lib/geo";
 import { actions } from "@/lib/progress";
@@ -90,26 +90,35 @@ export default function StateLearn({ id }: { id: string }) {
           <h2 className="mb-3 flex items-center gap-2 text-2xl font-bold">
             <Camera className="size-6 text-primary" /> Famous places
           </h2>
-          <ul className="grid gap-2">
-            {s.famousPlaces.map((p) => (
+          <ShowMore
+            as="ul"
+            items={s.famousPlaces}
+            initial={3}
+            noun="places"
+            className="grid gap-2"
+            render={(p) => (
               <li key={p} className="flex items-center gap-3 rounded-2xl bg-bg px-4 py-3 text-lg font-semibold">
                 <span className="size-2.5 shrink-0 rounded-full bg-secondary" />
                 {p}
               </li>
-            ))}
-          </ul>
+            )}
+          />
         </Card>
         <Card>
           <h2 className="mb-3 flex items-center gap-2 text-2xl font-bold">
             <Lightbulb className="size-6 text-[#e5a100]" /> Did you know?
           </h2>
-          <div className="space-y-3">
-            {s.facts.map((f, i) => (
+          <ShowMore
+            items={s.facts}
+            initial={1}
+            noun="facts"
+            className="space-y-3"
+            render={(f, i) => (
               <MascotSays key={i} mood={i % 2 ? "think" : "happy"} size={56}>
                 {f}
               </MascotSays>
-            ))}
-          </div>
+            )}
+          />
         </Card>
       </div>
     </div>

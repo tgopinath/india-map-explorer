@@ -26,17 +26,23 @@ function pickVoice(lang: VoiceLang) {
 export const speechSupported = () => typeof window !== "undefined" && "speechSynthesis" in window;
 export const hasTamilVoice = () => speechSupported() && Boolean(pickVoice("ta"));
 
-/** Speak text now, interrupting anything already being said. */
-export function speak(text: string, { force = false, lang = "en" as VoiceLang } = {}) {
+let last = { text: "", at: 0 };
+
+/** Speak text now, interrupting anything already being said. Speech is kept slow and clear for young children. */
+export function speak(text: string, { force = false, lang = "en" as VoiceLang, rate }: { force?: boolean; lang?: VoiceLang; rate?: number } = {}) {
   if (!speechSupported() || !text) return;
   if (!force && !getProgress().readAloud) return;
+  // The same words twice in a row (e.g. a tap announced, then the card saying its name) are said once.
+  const now = Date.now();
+  if (text === last.text && now - last.at < 1200) return;
+  last = { text, at: now };
   const synth = window.speechSynthesis;
   synth.cancel();
   const u = new SpeechSynthesisUtterance(text.replace(/[★⭐]/g, ""));
   const v = pickVoice(lang);
   if (v) u.voice = v;
   u.lang = v?.lang ?? (lang === "ta" ? "ta-IN" : "en-IN");
-  u.rate = lang === "ta" ? 0.85 : 0.88;
+  u.rate = rate ?? (lang === "ta" ? 0.75 : 0.78);
   u.pitch = 1.1;
   synth.speak(u);
 }
@@ -49,4 +55,32 @@ export function speakLocal(en: string, ta?: string | null, opts: { force?: boole
 
 export function stopSpeaking() {
   if (speechSupported()) window.speechSynthesis.cancel();
+}
+
+const clean = (t: string) =>
+  t
+    .replace(/[\u{1F1E6}-\u{1F1FF}\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]/gu, "")
+    .replace(/[→←↗·•|]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, 140);
+
+/**
+ * Say what a child just tapped, slowly. Runs before the tapped control's own handler, so a
+ * control that speaks something richer (a district's fact, a quiz answer) simply takes over.
+ */
+export function announceTap(target: EventTarget | null) {
+  const el = target instanceof Element ? target.closest("button, a[href], [role=button], [role=tab], summary") : null;
+  const region = target instanceof Element ? target.closest("[data-fid]") : null;
+  let label = "";
+  if (el && !el.closest("[data-no-announce]")) {
+    label = el.getAttribute("aria-label") || el.getAttribute("title") || (el as HTMLElement).innerText || "";
+  } else if (region) {
+    // map regions: only tappable ones, named by their path's label (tap dots share the path's id)
+    const id = region.getAttribute("data-fid");
+    const path = region.closest("svg")?.querySelector(`path[data-fid="${CSS.escape(id ?? "")}"][role=button]`);
+    label = path?.getAttribute("aria-label") ?? "";
+  }
+  label = clean(label);
+  if (label) speak(label, { rate: 0.7 });
 }

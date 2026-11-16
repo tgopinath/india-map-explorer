@@ -7,7 +7,8 @@ import MapView, { type RegionMark } from "./MapView";
 import { Mascot, MascotSays, type Mood } from "./Mascot";
 import { Button, Card, DataStatusBadge, LinkButton, Loading, Stars } from "./ui";
 import { getDistricts, getState, shuffle, STATES } from "@/lib/content";
-import { DISTRICT_FILLS, STATE_FILLS, useDistrictMap, useIndiaMap, type RegionFeature } from "@/lib/geo";
+import { DISTRICT_FILLS, STATE_FILLS, useDistrictMap, useIndiaMap, useWorldMap, type RegionFeature } from "@/lib/geo";
+import { continentBySlug, CONTINENT_BOX, COUNTRIES } from "@/lib/world";
 import { actions, starsFor, unlocks, useProgress, type PuzzleLevel } from "@/lib/progress";
 import { celebrate, playSound } from "@/lib/celebrate";
 import { speakLocal } from "@/lib/speech";
@@ -25,29 +26,39 @@ const pick = <T,>(arr: T[]) => arr[Math.floor(Math.random() * arr.length)];
 type Phase = "setup" | "play" | "done";
 interface Result { score: number; stars: number; timeSec: number; firstTry: number; total: number; hints: number }
 
-/** mapKey is "india" (arrange the states) or a state id (arrange its districts). */
+/** mapKey is "india" (arrange the states), "world-<continent>" (its countries) or a state id (its districts). */
 export default function PuzzleGame({ mapKey }: { mapKey: string }) {
   const isIndia = mapKey === "india";
+  const cont = mapKey.startsWith("world-") ? continentBySlug(mapKey.slice(6)) : undefined;
+  const isWorld = Boolean(cont);
   const india = useIndiaMap();
-  const dist = useDistrictMap(isIndia ? null : mapKey);
-  const { features, error } = isIndia ? india : dist;
-  const state = isIndia ? null : getState(mapKey)!;
-  const title = isIndia ? "Arrange the States" : `${state!.name} District Challenge`;
-  const what = isIndia ? "state" : "district";
+  const dist = useDistrictMap(isIndia || isWorld ? null : mapKey);
+  const world = useWorldMap(isWorld);
+  const worldFeatures = useMemo(() => {
+    if (!cont || !world.features) return null;
+    const ids = new Set(COUNTRIES.filter((c) => c.continent === cont.id).map((c) => c.id));
+    return world.features.filter((f) => ids.has(f.properties.id));
+  }, [cont, world.features]);
+  const { features, error } = isIndia ? india : isWorld ? { features: worldFeatures, error: world.error } : dist;
+  const state = isIndia || isWorld ? null : getState(mapKey)!;
+  const view = cont ? CONTINENT_BOX[cont.id] : undefined;
+  const title = isIndia ? "Arrange the States" : cont ? `${cont.id} Puzzle` : `${state!.name} District Challenge`;
+  const what = isIndia ? "state" : isWorld ? "country" : "district";
 
   const names = useMemo(() => {
     const m = new Map<string, string>();
     if (isIndia) STATES.forEach((s) => m.set(s.id, s.name));
+    else if (cont) COUNTRIES.filter((c) => c.continent === cont.id).forEach((c) => m.set(c.id, c.name));
     else getDistricts(mapKey).forEach((d) => m.set(d.id, d.name));
     return m;
-  }, [isIndia, mapKey]);
+  }, [isIndia, cont, mapKey]);
 
   const taNames = useMemo(() => {
     const m = new Map<string, string>();
     if (isIndia) STATES.forEach((s) => s.ta && m.set(s.id, s.ta.name));
-    else getDistricts(mapKey).forEach((d) => d.ta && m.set(d.id, d.ta.name));
+    else if (!cont) getDistricts(mapKey).forEach((d) => d.ta && m.set(d.id, d.ta.name));
     return m;
-  }, [isIndia, mapKey]);
+  }, [isIndia, cont, mapKey]);
   const sayName = (id: string) => speakLocal(names.get(id) ?? "", taNames.get(id));
 
   const p = useProgress();
@@ -138,7 +149,7 @@ export default function PuzzleGame({ mapKey }: { mapKey: string }) {
 
   const tryPlace = (card: string, regionId: string | null) => {
     if (!regionId || phase !== "play") return;
-    const key = isIndia ? `state:${card}` : `district:${mapKey}:${card}`;
+    const key = isIndia ? `state:${card}` : isWorld ? `country:${card}` : `district:${mapKey}:${card}`;
     if (regionId === card) {
       const nextPlaced = new Set(placed).add(card);
       setPlaced(nextPlaced);
@@ -231,7 +242,7 @@ export default function PuzzleGame({ mapKey }: { mapKey: string }) {
   if (hintId) marks[hintId] = "hint";
   if (flash) marks[flash.id] = flash.mark;
 
-  const fills = isIndia ? STATE_FILLS : DISTRICT_FILLS;
+  const fills = isIndia || isWorld ? STATE_FILLS : DISTRICT_FILLS;
   const fillFor = (f: RegionFeature) => {
     const c = fills[f.properties.c];
     if (phase === "setup") return c;
@@ -250,6 +261,8 @@ export default function PuzzleGame({ mapKey }: { mapKey: string }) {
           labelMode="none"
           nameFor={(f) => names.get(f.properties.id) ?? ""}
           ariaLabel={`${title} map`}
+          box={view?.box}
+          rotate={view?.rotate}
           zoomable={false}
           maxHeight="70vh"
         />
@@ -333,6 +346,8 @@ export default function PuzzleGame({ mapKey }: { mapKey: string }) {
             labelFor={(f) => (placed.has(f.properties.id) || prefilled.has(f.properties.id) ? names.get(f.properties.id) ?? null : null)}
             nameFor={(f) => (placed.has(f.properties.id) || prefilled.has(f.properties.id) ? names.get(f.properties.id)! : `Empty ${what}`)}
             ariaLabel={`${title} map`}
+            box={view?.box}
+            rotate={view?.rotate}
             maxHeight="72vh"
           />
           <p className="mt-2 text-sm text-ink-soft">Tiny places have a dot. Zoom in with + if a {what} is hard to reach.</p>

@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { Check, Search } from "lucide-react";
-import { Chip, PageHeader } from "@/components/ui";
+import { Chip, PageHeader, ShowMore } from "@/components/ui";
 import { REGION_COLOURS, STATES, type Region } from "@/lib/content";
 import { useProgress } from "@/lib/progress";
 
@@ -61,8 +61,13 @@ export default function StatesPage() {
         </div>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {list.map((s) => {
+      <ShowMore
+        key={`${q}|${region}|${type}`}
+        items={list}
+        initial={q || region !== "all" || type !== "all" ? list.length : 9}
+        noun="states"
+        className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3"
+        render={(s) => {
           const seen = p.statesViewed.includes(s.id);
           return (
             <Link
@@ -87,8 +92,8 @@ export default function StatesPage() {
               </div>
             </Link>
           );
-        })}
-      </div>
+        }}
+      />
     </div>
   );
 }

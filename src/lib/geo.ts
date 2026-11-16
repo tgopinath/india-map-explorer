@@ -64,6 +64,8 @@ function useFeatures(url: string | null, object: string) {
 
 export const useIndiaMap = () => useFeatures(indiaUrl, "states");
 export const useDistrictMap = (stateId: string | null) => useFeatures(stateId ? districtsUrl(stateId) : null, "districts");
+export const worldUrl = "/data/world.topo.json";
+export const useWorldMap = (on = true) => useFeatures(on ? worldUrl : null, "countries");
 
 /** Soft, kid-friendly fills. Index comes from the build-time colouring. */
 export const STATE_FILLS = ["#9cc3ff", "#ffd98a", "#9fddbf", "#ffb899", "#cdb8f5", "#ffb3c7", "#8ed9d9", "#cfe89a"];

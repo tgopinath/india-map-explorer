@@ -31,6 +31,7 @@ export interface Progress {
   points: number;
   statesViewed: string[];
   statesExplored: string[];
+  countriesExplored: string[];
   districtsLearned: Record<string, string[]>;
   puzzles: Record<string, PuzzleRecord>;
   quizzes: QuizRecord[];
@@ -56,6 +57,7 @@ export const emptyProgress = (): Progress => ({
   points: 0,
   statesViewed: [],
   statesExplored: [],
+  countriesExplored: [],
   districtsLearned: {},
   puzzles: {},
   quizzes: [],
@@ -173,6 +175,13 @@ export const actions = {
       p.points += 5;
     });
   },
+  exploreCountry(id: string) {
+    if (read().countriesExplored.includes(id)) return;
+    update((p) => {
+      p.countriesExplored = addUnique(p.countriesExplored, id);
+      p.points += 5;
+    });
+  },
   learnDistrict(stateId: string, districtId: string) {
     if (read().districtsLearned[stateId]?.includes(districtId)) return;
     update((p) => {
@@ -268,6 +277,8 @@ export const BADGES: BadgeDef[] = [
     earned: (p) => Object.keys(p.puzzles).some((k) => k.endsWith(":hard")) },
   { id: "streak-3", name: "On a Roll", description: "Learn 3 days in a row", colour: "#00a3a3",
     earned: (p) => p.streak.best >= 3 },
+  { id: "world-traveller", name: "World Traveller", description: "Visit 20 countries on the world map", colour: "#2f9e8f",
+    earned: (p) => p.countriesExplored.length >= 20 },
   { id: "tn-pro", name: "Tamil Nadu Pro", description: "Learn all 38 Tamil Nadu districts", colour: "#d6336c",
     earned: (p) => (p.districtsLearned["tamil-nadu"]?.length ?? 0) >= 38 },
 ];

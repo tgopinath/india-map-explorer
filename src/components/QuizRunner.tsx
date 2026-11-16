@@ -6,7 +6,8 @@ import MapView, { type RegionMark } from "./MapView";
 import { Mascot, MascotSays, type Mood } from "./Mascot";
 import { Button, Card, LinkButton, Loading, ProgressBar, Stars } from "./ui";
 import { getDistricts, getState, STATES } from "@/lib/content";
-import { DISTRICT_FILLS, STATE_FILLS, useDistrictMap, useIndiaMap, type RegionFeature } from "@/lib/geo";
+import { DISTRICT_FILLS, STATE_FILLS, useDistrictMap, useIndiaMap, useWorldMap, type RegionFeature } from "@/lib/geo";
+import { countryName } from "@/lib/world";
 import type { Question } from "@/lib/questions";
 import { actions, starsFor } from "@/lib/progress";
 import { celebrate, playSound } from "@/lib/celebrate";
@@ -47,9 +48,10 @@ export default function QuizRunner({ make, stateId, onFinish, backHref, backLabe
   const [wrongTap, setWrongTap] = useState<string | null>(null);
 
   const india = useIndiaMap();
+  const world = useWorldMap(qs.some((x) => x.map === "world"));
   const dist = useDistrictMap(stateId ?? null);
   const q = qs[i];
-  const features = q?.map === "district" ? dist.features : india.features;
+  const features = q?.map === "district" ? dist.features : q?.map === "world" ? world.features : india.features;
 
   const names = useMemo(() => {
     const m = new Map<string, string>();
@@ -63,7 +65,8 @@ export default function QuizRunner({ make, stateId, onFinish, backHref, backLabe
     if (stateId) getDistricts(stateId).forEach((d) => d.ta && m.set(d.name, d.ta.name));
     return m;
   }, [stateId]);
-  const nameOf = (f: RegionFeature) => (q?.map === "district" ? names.get(f.properties.id) ?? "" : getState(f.properties.id)?.name ?? "");
+  const regionName = (id: string) => (q?.map === "district" ? names.get(id) ?? "" : q?.map === "world" ? countryName(id) : getState(id)?.name ?? "");
+  const nameOf = (f: RegionFeature) => regionName(f.properties.id);
 
   useEffect(() => {
     if (result) return;
@@ -111,7 +114,7 @@ export default function QuizRunner({ make, stateId, onFinish, backHref, backLabe
       setWrongTap(value);
       window.setTimeout(() => setWrongTap(null), 700);
       playSound("wrong");
-      setSay({ mood: "oops", text: `That's ${q.map === "district" ? names.get(value) : getState(value)?.name}. Have another go!` });
+      setSay({ mood: "oops", text: `That's ${regionName(value)}. Have another go!` });
       return;
     }
     setPicked(value);
@@ -194,6 +197,8 @@ export default function QuizRunner({ make, stateId, onFinish, backHref, backLabe
               labelFor={nameOf}
               nameFor={(f) => (q.kind === "tap" ? nameOf(f) : "Map region")}
               onSelect={q.kind === "tap" && !answered ? answer : undefined}
+              projection={q.map === "world" ? "world" : "mercator"}
+              tinyArea={q.map === "world" ? 4 : undefined}
               focusId={null}
               ariaLabel="Quiz map"
               maxHeight="64vh"

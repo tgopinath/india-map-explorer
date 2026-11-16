@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import type { ComponentProps, ReactNode } from "react";
-import { AlertTriangle, BadgeCheck, Info, Star } from "lucide-react";
+import { useState, type ComponentProps, type ReactNode } from "react";
+import { AlertTriangle, BadgeCheck, ChevronDown, ChevronUp, Info, Star } from "lucide-react";
 import type { DataStatus } from "@/lib/content";
 
 type Tone = "primary" | "secondary" | "success" | "accent" | "ghost" | "white";
@@ -104,5 +104,55 @@ export function Loading({ label = "Unfolding the map…" }: { label?: string }) 
         <p className="font-display text-lg">{label}</p>
       </div>
     </div>
+  );
+}
+
+/**
+ * Shows the first few items with a "More" button for the rest, so pages stay short and calm.
+ * `className` styles the wrapper the items sit in (e.g. a grid); `as="ul"` for lists.
+ */
+export function ShowMore<T>({
+  items,
+  initial,
+  render,
+  className = "",
+  noun = "more",
+  as: Tag = "div",
+}: {
+  items: T[];
+  initial: number;
+  render: (item: T, index: number) => ReactNode;
+  className?: string;
+  noun?: string;
+  as?: "div" | "ul";
+}) {
+  const [open, setOpen] = useState(false);
+  const shown = open ? items : items.slice(0, initial);
+  const hidden = items.length - initial;
+  return (
+    <>
+      <Tag className={className}>{shown.map(render)}</Tag>
+      {hidden > 0 && (
+        <div className="mt-3 flex justify-center">
+          <button
+            type="button"
+            onClick={() => setOpen(!open)}
+            aria-expanded={open}
+            aria-label={open ? "Show less" : `Show ${hidden} ${noun}`}
+            className="inline-flex items-center gap-2 rounded-full bg-white px-5 py-2.5 font-display text-lg font-bold text-primary shadow-[0_3px_0_#d5dcea] transition hover:bg-primary-soft active:translate-y-px"
+          >
+            {open ? (
+              <>
+                Show less <ChevronUp className="size-5" />
+              </>
+            ) : (
+              <>
+                More <span className="rounded-full bg-primary-soft px-2 text-sm">+{hidden}</span> <ChevronDown className="size-5" />
+              </>
+            )}
+          </button>
+        </div>
+      )}
+    </>
   );
 }

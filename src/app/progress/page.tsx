@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { Award, Clock, Compass, Flame, Lock, Map as MapIcon, Puzzle, Star, Trophy } from "lucide-react";
 import { Mascot } from "@/components/Mascot";
-import { Card, PageHeader, ProgressBar, Stars } from "@/components/ui";
+import { Card, PageHeader, ProgressBar, ShowMore, Stars } from "@/components/ui";
 import { getState, PILOT_STATE, STATES } from "@/lib/content";
 import { BADGES, levelFor, LEVELS, useProgress } from "@/lib/progress";
 
@@ -40,8 +40,12 @@ export default function ProgressPage() {
 
       <section>
         <h2 className="mb-3 flex items-center gap-2 text-2xl font-bold"><Award className="size-6 text-accent" /> Badges</h2>
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-          {BADGES.map((b) => {
+        <ShowMore
+          items={[...BADGES].sort((a, b) => Number(Boolean(p.badges[b.id])) - Number(Boolean(p.badges[a.id])))}
+          initial={4}
+          noun="badges"
+          className="grid grid-cols-2 gap-3 sm:grid-cols-4"
+          render={(b) => {
             const got = Boolean(p.badges[b.id]);
             return (
               <Card key={b.id} className={`flex flex-col items-center gap-2 p-4 text-center ${got ? "" : "opacity-60"}`}>
@@ -55,8 +59,8 @@ export default function ProgressPage() {
                 <p className="text-sm text-ink-soft">{b.description}</p>
               </Card>
             );
-          })}
-        </div>
+          }}
+        />
       </section>
 
       <div className="grid gap-5 md:grid-cols-2">

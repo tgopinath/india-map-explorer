@@ -16,6 +16,7 @@ npm run build      # production build
 | Section | Route | What it does |
 | --- | --- | --- |
 | Home | `/` | Mascot greeting, level, streak, shortcuts |
+| World Map | `/world` | Every country by continent, with capital, population and neighbours; "Identify the Country" game and continent puzzles (`/puzzle/world-asia` etc.) |
 | Explore India | `/explore` | Zoomable state map, search, capital / neighbours / district count panel, colour by region |
 | Learn States | `/states`, `/states/[id]` | Filterable list; state page with map, capital, languages, districts, places, facts |
 | Learn Districts | `/districts`, `/districts/[id]` | District map, tap to reveal name + fact, search, guided tour, next-door districts |
@@ -39,6 +40,10 @@ Boundaries come from the Government of India's **Local Government Directory (LGD
 
 Geometry is only simplified, never edited. To refresh, download `LGD_States.geojsonl.7z` and `LGD_Districts.geojsonl.7z` from the release pages, extract them into `data-raw/`, and run `npm run build:maps && npm run validate`.
 
+### World map
+
+`npm run build:world` builds `public/data/world.topo.json` from [Natural Earth](https://www.naturalearthdata.com/) 1:10m countries, **India point-of-view edition** (public domain), with India drawn from the same official LGD outline as the rest of the app and neighbouring shapes trimmed around it. Capitals come from Natural Earth populated places, with a few documented corrections in `scripts/build-world.mjs` (Astana, Dodoma, Sri Jayawardenepura Kotte, Yamoussoukro). Capitals whose status is disputed internationally are left blank. Raw files go in `data-raw/world/`.
+
 ### Verified vs. snapshot
 
 Each state carries a `dataStatus`, shown as a badge in the app:
@@ -56,6 +61,10 @@ Other states have likely changed too (the snapshot has 52 districts for Madhya P
 3. Add the state id to `VERIFIED` in `scripts/build-maps.mjs` once the list is checked, then run `npm run build:maps && npm run validate`.
 
 State-level content (capitals, languages, places, facts) lives in `src/data/states.json`.
+
+## For children who can't read yet
+
+Every tap is read aloud slowly (button, card or map region), names and facts are spoken in English or Tamil (switch in the sidebar), and long lists show a few items with a **More** button.
 
 ## Progress and privacy
 

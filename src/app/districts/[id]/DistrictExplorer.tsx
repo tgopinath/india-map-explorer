@@ -5,7 +5,7 @@ import { useMemo, useRef, useState } from "react";
 import { ArrowLeft, Check, Volume2, ChevronLeft, ChevronRight, Building2, GraduationCap, Puzzle, Search, Sparkles, X } from "lucide-react";
 import MapView from "@/components/MapView";
 import { Mascot, MascotSays } from "@/components/Mascot";
-import { Button, Card, DataStatusBadge, LinkButton, Loading, PageHeader, ProgressBar } from "@/components/ui";
+import { Button, Card, DataStatusBadge, LinkButton, Loading, PageHeader, ProgressBar, ShowMore } from "@/components/ui";
 import { getDistricts, getState } from "@/lib/content";
 import { DISTRICT_FILLS, useDistrictMap } from "@/lib/geo";
 import { actions, useProgress } from "@/lib/progress";
@@ -180,8 +180,17 @@ export default function DistrictExplorer({ id }: { id: string }) {
                 className="w-full rounded-2xl border-2 border-line bg-white py-2.5 pl-10 pr-3 text-lg outline-none focus:border-primary"
               />
             </div>
-            <ul className="max-h-[46vh] space-y-1 overflow-y-auto pr-1">
-              {list.map((x) => (
+            {list.length === 0 ? (
+              <p className="px-3 py-2 text-ink-soft">No district called “{q}”.</p>
+            ) : (
+              <ShowMore
+                key={q}
+                as="ul"
+                items={list}
+                initial={q ? list.length : 10}
+                noun="districts"
+                className="space-y-1"
+                render={(x) => (
                 <li key={x.id} className="flex items-center gap-1">
                   <button
                     type="button"
@@ -203,9 +212,9 @@ export default function DistrictExplorer({ id }: { id: string }) {
                     {learned.has(x.id) && <Check className={`size-4 ${x.id === selected ? "text-white" : "text-success"}`} />}
                   </button>
                 </li>
-              ))}
-              {list.length === 0 && <li className="px-3 py-2 text-ink-soft">No district called “{q}”.</li>}
-            </ul>
+                )}
+              />
+            )}
           </Card>
 
           {done === districts.length && (

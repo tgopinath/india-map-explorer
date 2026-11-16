@@ -1,11 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { Puzzle } from "lucide-react";
+import { Globe2, Puzzle } from "lucide-react";
 import { Mascot } from "@/components/Mascot";
-import { DataStatusBadge, PageHeader, Stars } from "@/components/ui";
+import { DataStatusBadge, PageHeader, ShowMore, Stars } from "@/components/ui";
 import { PILOT_STATE, STATES } from "@/lib/content";
 import { useProgress, type Progress } from "@/lib/progress";
+import { CONTINENT_BOX, CONTINENTS, countriesIn } from "@/lib/world";
 
 const best = (p: Progress, key: string) =>
   Math.max(0, ...(["easy", "medium", "hard"] as const).map((l) => p.puzzles[`${key}:${l}`]?.stars ?? 0));
@@ -38,9 +39,32 @@ export default function PuzzleHub() {
         </Link>
       </div>
 
+      <h2 id="world" className="mb-3 flex scroll-mt-20 items-center gap-2 text-2xl font-bold">
+        <Globe2 className="size-6 text-[#1f8a7a]" /> World puzzles
+      </h2>
+      <div className="mb-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        {CONTINENTS.filter((c) => CONTINENT_BOX[c.id]).map((c) => (
+          <Link key={c.id} href={`/puzzle/world-${c.slug}`} className="relative overflow-hidden rounded-3xl bg-white p-4 shadow-[var(--shadow-card)] transition hover:-translate-y-0.5">
+            <span className="absolute inset-y-0 left-0 w-2" style={{ background: c.colour }} />
+            <div className="flex items-start justify-between gap-2">
+              <div>
+                <h3 className="text-lg font-bold leading-tight">{c.id}</h3>
+                <p className="text-sm text-ink-soft">{countriesIn(c.id).length} countries & territories</p>
+              </div>
+              <Stars count={best(p, `world-${c.slug}`)} size="size-5" />
+            </div>
+            <p className="mt-1 text-sm text-ink-soft">{c.blurb}</p>
+          </Link>
+        ))}
+      </div>
+
       <h2 className="mb-3 text-2xl font-bold">District puzzles for every state</h2>
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-        {STATES.filter((s) => s.id !== PILOT_STATE).map((s) => (
+      <ShowMore
+        items={STATES.filter((s) => s.id !== PILOT_STATE)}
+        initial={6}
+        noun="state puzzles"
+        className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3"
+        render={(s) => (
           <Link key={s.id} href={`/puzzle/${s.id}`} className="rounded-3xl bg-white p-4 shadow-[var(--shadow-card)] transition hover:-translate-y-0.5">
             <div className="flex items-start justify-between gap-2">
               <div>
@@ -51,8 +75,8 @@ export default function PuzzleHub() {
             </div>
             <div className="mt-2"><DataStatusBadge status={s.dataStatus} issues={s.issues} /></div>
           </Link>
-        ))}
-      </div>
+        )}
+      />
     </div>
   );
 }

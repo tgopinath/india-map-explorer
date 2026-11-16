@@ -5,7 +5,9 @@ import fs from "node:fs";
 import path from "node:path";
 import { feature } from "topojson-client";
 import { getDistricts, getState, PILOT_STATE, STATES } from "../src/lib/content";
+import { CONTINENT_BOX, CONTINENTS, COUNTRIES, getCountry } from "../src/lib/world";
 import {
+  continentQs, identifyCountryQs,
   capitalMcqQs, districtMcqQs, districtTapQs, findCapitalQs, identifyStateQs, neighbourMcqQs, type Question,
 } from "../src/lib/questions";
 
@@ -90,8 +92,23 @@ for (const s of STATES.filter((x) => x.districtCount >= 4)) {
   }
 }
 
+// 6. World map: every country has a shape; India uses the official outline and its
+// neighbours match India's official map; continent puzzles have countries.
+const world = JSON.parse(fs.readFileSync(path.join(ROOT, "public/data/world.topo.json"), "utf8"));
+const worldIds = new Set(world.objects.countries.geometries.map((g: { id: string }) => g.id));
+check(COUNTRIES.every((c) => worldIds.has(c.id)), "world: country without a shape");
+check(JSON.stringify(getCountry("in")?.neighbours) === JSON.stringify(["af", "bd", "bt", "cn", "mm", "np", "pk"]), `world: India neighbours ${getCountry("in")?.neighbours}`);
+check(getCountry("in")?.capitals[0] === "New Delhi", "world: India capital");
+for (const k of CONTINENTS) if (CONTINENT_BOX[k.id]) check(COUNTRIES.filter((c) => c.continent === k.id).length >= 10, `world: ${k.id} puzzle too small`);
+for (const [id, cap] of [["fr", "Paris"], ["jp", "Tokyo"], ["kz", "Astana"], ["lk", "Sri Jayawardenepura Kotte"], ["au", "Canberra"]] as const)
+  check(getCountry(id)?.capitals.includes(cap), `world: ${id} capital should include ${cap}`);
+for (let i = 0; i < 200; i++) {
+  identifyCountryQs().forEach((q) => validate(q, "country"));
+  continentQs().forEach((q) => validate(q, "continent"));
+}
+
 if (failures) {
   console.error(`\n${failures} check(s) failed`);
   process.exit(1);
 }
-console.log(`✓ all checks passed — ${STATES.length} states/UTs, ${STATES.reduce((a, s) => a + s.districtCount, 0)} districts, Tamil Nadu verified (${tn.length})`);
+console.log(`✓ all checks passed — ${COUNTRIES.length} world regions, ${STATES.length} states/UTs, ${STATES.reduce((a, s) => a + s.districtCount, 0)} districts, Tamil Nadu verified (${tn.length})`);

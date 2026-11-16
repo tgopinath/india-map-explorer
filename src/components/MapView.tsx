@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import { geoMercator, geoPath } from "d3-geo";
+import { geoMercator, geoNaturalEarth1, geoPath } from "d3-geo";
 import { select } from "d3-selection";
 import { zoom as d3zoom, zoomIdentity, type ZoomBehavior, type ZoomTransform } from "d3-zoom";
 import { Minus, Plus, RotateCcw } from "lucide-react";
@@ -28,6 +28,12 @@ interface Props {
   className?: string;
   overlay?: ReactNode;
   maxHeight?: string;
+  /** "world" uses a rounded world projection; box fits [west, south, east, north] (degrees). */
+  projection?: "mercator" | "world";
+  box?: [number, number, number, number];
+  rotate?: number;
+  /** regions smaller than this (viewBox units², at normal zoom) also get a tap dot */
+  tinyArea?: number;
 }
 
 const W = 800;
@@ -59,6 +65,10 @@ export default function MapView({
   className = "",
   overlay,
   maxHeight = "70vh",
+  projection: projKind = "mercator",
+  box,
+  rotate = 0,
+  tinyArea = TINY_AREA,
 }: Props) {
   const svgRef = useRef<SVGSVGElement>(null);
   const zoomRef = useRef<ZoomBehavior<SVGSVGElement, unknown> | null>(null);
@@ -67,20 +77,46 @@ export default function MapView({
   const [hover, setHover] = useState<string | null>(null);
   const [unitsPerPx, setUnitsPerPx] = useState(1);
 
+  const boxKey = box?.join();
   const geo = useMemo(() => {
     const fc = { type: "FeatureCollection" as const, features };
-    const projection = geoMercator().fitWidth(W - PAD * 2, fc);
+    // Fit to the features, or to a lon/lat box (a few points along its edges) for continent views.
+    const target = box
+      ? {
+          type: "MultiPoint" as const,
+          coordinates: [0, 0.25, 0.5, 0.75, 1].flatMap((t) => [
+            [box[0] + (box[2] - box[0]) * t, box[1]],
+            [box[0] + (box[2] - box[0]) * t, box[3]],
+          ]),
+        }
+      : fc;
+    const projection = (projKind === "world" ? geoNaturalEarth1() : geoMercator()).rotate([rotate, 0]).fitWidth(W - PAD * 2, target);
     const path = geoPath(projection);
-    const [[, y0], [, y1]] = path.bounds(fc);
+    const [[, y0], [, y1]] = path.bounds(target);
     const H = Math.ceil(y1 - y0 + PAD * 2);
-    projection.fitExtent([[PAD, PAD], [W - PAD, H - PAD]], fc);
+    projection.fitExtent([[PAD, PAD], [W - PAD, H - PAD]], target);
     const items = features.map((f) => {
       const area = path.area(f);
       const [lx, ly] = projection([f.properties.lx, f.properties.ly]) ?? [0, 0];
-      return { f, id: f.properties.id, d: path(f) ?? "", area, lx, ly, bounds: path.bounds(f), tiny: area < TINY_AREA };
+      // Zoom to the main landmass, so e.g. France isn't framed together with French Guiana.
+      let focus = path.bounds(f);
+      if (f.geometry.type === "MultiPolygon") {
+        let best = -1;
+        for (const coordinates of f.geometry.coordinates) {
+          const part = { type: "Polygon" as const, coordinates };
+          const a = path.area(part);
+          if (a > best) {
+            best = a;
+            focus = path.bounds(part);
+          }
+        }
+      }
+      return { f, id: f.properties.id, d: path(f) ?? "", area, lx, ly, bounds: path.bounds(f), focus, tiny: area < tinyArea };
     });
     return { H, items };
-  }, [features]);
+    // box is a stable tuple per continent
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [features, projKind, rotate, boxKey, tinyArea]);
 
   // Track rendered size so labels and dots stay a readable size on any screen.
   useEffect(() => {
@@ -144,7 +180,7 @@ export default function MapView({
     if (!focusId || !zoomable) return;
     const it = geo.items.find((i) => i.id === focusId);
     if (!it) return;
-    const [[x0, y0], [x1, y1]] = it.bounds;
+    const [[x0, y0], [x1, y1]] = it.focus;
     const k = Math.min(6, Math.max(1, 0.55 / Math.max((x1 - x0) / W, (y1 - y0) / geo.H)));
     const x = W / 2 - k * (x0 + x1) / 2;
     const y = geo.H / 2 - k * (y0 + y1) / 2;
@@ -242,7 +278,7 @@ export default function MapView({
             .filter((it) => it.tiny)
             .map((it) => {
               const mark = marks[it.id];
-              const r = (9 * unitsPerPx) / t.k;
+              const r = ((tinyArea < TINY_AREA ? 6 : 9) * unitsPerPx) / t.k;
               if (it.area * screenScale * screenScale > 900) return null;
               return (
                 <circle

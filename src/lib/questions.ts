@@ -2,10 +2,11 @@
 // content layer (curated capitals) or the boundary data (neighbours, districts).
 
 import { getDistricts, getState, sample, shortCapital, shuffle, STATES, type StateInfo } from "./content";
+import { CONTINENTS, COUNTRIES, getCountry, isCountry } from "./world";
 
 export type Question =
-  | { kind: "mcq"; id: string; prompt: string; map: "india" | "district"; highlight: string | null; options: string[]; answer: string; key: string; explain: string }
-  | { kind: "tap"; id: string; prompt: string; map: "india" | "district"; answer: string; key: string; explain: string };
+  | { kind: "mcq"; id: string; prompt: string; map: "india" | "district" | "world"; highlight: string | null; options: string[]; answer: string; key: string; explain: string }
+  | { kind: "tap"; id: string; prompt: string; map: "india" | "district" | "world"; answer: string; key: string; explain: string };
 
 /** Pick distractors close to the answer first (neighbours, same region) so questions make kids think. */
 function nearFirst<T>(pool: T[], near: T[], n: number) {
@@ -121,5 +122,45 @@ export function districtTapQs(stateId: string, n = 10): Question[] {
     answer: d.id,
     key: `district:${stateId}:${d.id}`,
     explain: d.fact ?? `${d.name} is a district of ${getState(stateId)!.name}.`,
+  }));
+}
+
+// Countries big enough (or populous enough) to be a fair question for children.
+const QUIZ_COUNTRIES = () => COUNTRIES.filter((c) => isCountry(c) && c.pop >= 2_000_000);
+
+export function identifyCountryQs(n = 10): Question[] {
+  const pool = QUIZ_COUNTRIES();
+  return sample(pool, n).map((c) => {
+    const others = nearFirst(
+      pool.filter((x) => x.id !== c.id).map((x) => x.id),
+      [...c.neighbours, ...pool.filter((x) => x.continent === c.continent).map((x) => x.id)],
+      3,
+    );
+    return {
+      kind: "mcq",
+      id: `ic-${c.id}`,
+      prompt: "Which country is glowing?",
+      map: "world",
+      highlight: c.id,
+      options: shuffle([c.id, ...others]).map((id) => getCountry(id)!.name),
+      answer: c.name,
+      key: `country:${c.id}`,
+      explain: `That's ${c.name}, in ${c.continent}.${c.capitals.length ? ` Its capital is ${c.capitals[0]}.` : ""}`,
+    };
+  });
+}
+
+export function continentQs(n = 5): Question[] {
+  const names = CONTINENTS.filter((k) => k.id !== "Antarctica").map((k) => k.id);
+  return sample(QUIZ_COUNTRIES(), n).map((c) => ({
+    kind: "mcq",
+    id: `ct-${c.id}`,
+    prompt: `${c.name} is glowing. Which continent is it in?`,
+    map: "world",
+    highlight: c.id,
+    options: shuffle([c.continent, ...sample(names.filter((x) => x !== c.continent), 3)]),
+    answer: c.continent,
+    key: `continent:${c.id}`,
+    explain: `${c.name} is in ${c.continent}.`,
   }));
 }
