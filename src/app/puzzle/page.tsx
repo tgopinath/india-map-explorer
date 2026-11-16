@@ -75,7 +75,7 @@ export default function PuzzleHub() {
         {CONTINENTS.filter((c) => CONTINENT_BOX[c.id]).map((c) => (
           <div key={c.id} className="relative">
             <Link href={`/puzzle/world-${c.slug}`} className="flex h-full flex-col overflow-hidden rounded-3xl bg-white shadow-[var(--shadow-card)] transition hover:-translate-y-0.5">
-              <div className="grid h-28 place-items-center" style={{ background: `${c.colour}b0` }}>
+              <div className="grid h-28 place-items-center" style={{ background: `${c.colour}e0` }}>
                 {world.features ? <ContinentLocator continent={c.id} features={world.features} continentOf={continentOf} colour="#356ae6" size={170} /> : <div className="h-[90px] w-[170px]" />}
               </div>
               <div className="p-4">
@@ -99,9 +99,9 @@ export default function PuzzleHub() {
         noun="state puzzles"
         className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3"
         render={(s) => (
-          <div key={s.id} className="relative">
-            <Link href={`/puzzle/${s.id}`} className="flex h-full items-center gap-4 rounded-3xl bg-white p-3 pr-16 shadow-[var(--shadow-card)] transition hover:-translate-y-0.5">
-              <div className="relative grid shrink-0 place-items-center rounded-2xl p-1.5" style={{ background: `${REGION_COLOURS[s.region]}b0` }}>
+          <div key={s.id} className="relative transition hover:z-20 hover:-translate-y-0.5">
+            <Link href={`/puzzle/${s.id}`} className="flex h-full items-center gap-4 rounded-3xl bg-white p-3 pr-16 shadow-[var(--shadow-card)]">
+              <div className="relative grid shrink-0 place-items-center rounded-2xl p-1.5" style={{ background: `${REGION_COLOURS[s.region]}e0` }}>
                 <DistrictPreview stateId={s.id} fills={DISTRICT_FILLS} size={84} />
                 {india.features && (
                   <span className="absolute -bottom-1 -right-1 rounded-lg bg-white p-0.5 shadow">

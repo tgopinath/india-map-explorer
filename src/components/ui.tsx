@@ -50,11 +50,12 @@ export function PageHeader({
   back?: string | (() => void);
   backLabel?: string;
 }) {
+  // On wide screens the arrow hangs in the margin so the title lines up with the content below.
   const cls =
-    "mt-1 grid size-11 shrink-0 place-items-center rounded-full bg-white text-primary shadow-[0_3px_0_#d5dcea] transition hover:bg-primary-soft active:translate-y-px sm:size-12";
+    "mt-1 grid size-11 shrink-0 place-items-center rounded-full bg-white text-primary shadow-[0_3px_0_#d5dcea] transition hover:bg-primary-soft active:translate-y-px xl:absolute xl:-left-[4.25rem] xl:top-0 xl:mt-0 xl:size-12";
   return (
     <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
-      <div className="flex min-w-0 items-start gap-3">
+      <div className="relative flex min-w-0 items-start gap-3 xl:gap-0">
         {back &&
           (typeof back === "string" ? (
             <Link href={back} aria-label={backLabel} title={backLabel} className={cls}>

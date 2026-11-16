@@ -75,13 +75,13 @@ export default function DistrictsHome() {
         noun="states"
         className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3"
         render={(s) => (
-          <div key={s.id} className="relative">
+          <div key={s.id} className="relative transition hover:z-20 hover:-translate-y-0.5">
             <Link
               href={`/districts/${s.id}`}
               aria-label={`${s.name}, ${districtsLabel(s.districtCount)}`}
-              className="flex h-full items-center gap-4 rounded-3xl bg-white p-3 pr-16 shadow-[var(--shadow-card)] transition hover:-translate-y-0.5"
+              className="flex h-full items-center gap-4 rounded-3xl bg-white p-3 pr-16 shadow-[var(--shadow-card)]"
             >
-              <div className="relative grid shrink-0 place-items-center rounded-2xl p-1.5" style={{ background: `${REGION_COLOURS[s.region]}b0` }}>
+              <div className="relative grid shrink-0 place-items-center rounded-2xl p-1.5" style={{ background: `${REGION_COLOURS[s.region]}e0` }}>
                 <DistrictPreview stateId={s.id} fills={DISTRICT_FILLS} size={84} />
                 {features && (
                   <span className="absolute -bottom-1 -right-1 rounded-lg bg-white p-0.5 shadow">
