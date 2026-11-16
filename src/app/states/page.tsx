@@ -39,9 +39,8 @@ export default function StatesPage() {
 
   return (
     <div>
-      <PageHeader title="Learn States" subtitle={`${p.statesViewed.length} of ${STATES.length} explored. Tap a card to start learning!`} />
-      <div className="mb-5 space-y-3">
-        <div className="relative max-w-sm">
+      <PageHeader back="/"  title="Learn States" subtitle={`${p.statesViewed.length} of ${STATES.length} explored. Tap a card to start learning!`}>
+        <div className="relative w-full sm:w-80">
           <Search className="pointer-events-none absolute left-4 top-1/2 size-5 -translate-y-1/2 text-ink-soft" />
           <input
             value={q}
@@ -51,6 +50,8 @@ export default function StatesPage() {
             className="w-full rounded-2xl border-2 border-line bg-white py-3 pl-11 pr-4 text-lg outline-none focus:border-primary"
           />
         </div>
+      </PageHeader>
+      <div className="mb-5 space-y-3">
         <div className="flex flex-wrap gap-2">
           {(["all", "state", "ut"] as const).map((t) => (
             <button key={t} type="button" onClick={() => setType(t)} className={`rounded-full px-4 py-2 font-display font-semibold ${type === t ? "bg-ink text-white" : "bg-white text-ink-soft"}`}>

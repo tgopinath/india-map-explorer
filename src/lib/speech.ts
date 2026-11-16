@@ -84,3 +84,28 @@ export function announceTap(target: EventTarget | null) {
   label = clean(label);
   if (label) speak(label, { rate: 0.7 });
 }
+
+/** Read several lines in order with a short pause between them (e.g. a title, then its description). */
+export function speakLines(lines: string[], { force = false } = {}) {
+  if (!speechSupported() || !lines.length) return;
+  if (!force && !getProgress().readAloud) return;
+  const synth = window.speechSynthesis;
+  synth.cancel();
+  last = { text: "", at: 0 };
+  const v = pickVoice("en");
+  lines.filter(Boolean).forEach((text, i) => {
+    const u = new SpeechSynthesisUtterance(clean(text));
+    if (v) u.voice = v;
+    u.lang = v?.lang ?? "en-IN";
+    u.rate = 0.75;
+    u.pitch = 1.1;
+    if (i > 0) {
+      // a short silent beat between lines
+      const gap = new SpeechSynthesisUtterance(" ");
+      gap.volume = 0;
+      gap.rate = 0.5;
+      synth.speak(gap);
+    }
+    synth.speak(u);
+  });
+}

@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { geoMercator, geoNaturalEarth1, geoPath } from "d3-geo";
 import { select } from "d3-selection";
 import { zoom as d3zoom, zoomIdentity, type ZoomBehavior, type ZoomTransform } from "d3-zoom";
-import { Minus, Plus, RotateCcw } from "lucide-react";
+import { Maximize2, Minimize2, Minus, Plus, RotateCcw } from "lucide-react";
 import type { RegionFeature } from "@/lib/geo";
 
 export type RegionMark = "correct" | "wrong" | "hint" | "target" | "dim" | "found" | "blank" | "selected";
@@ -76,6 +76,8 @@ export default function MapView({
   const [animate, setAnimate] = useState(false);
   const [hover, setHover] = useState<string | null>(null);
   const [unitsPerPx, setUnitsPerPx] = useState(1);
+  const boxRef = useRef<HTMLDivElement>(null);
+  const full = useFullscreen(boxRef);
 
   const boxKey = box?.join();
   const geo = useMemo(() => {
@@ -211,14 +213,17 @@ export default function MapView({
   };
 
   return (
-    <div className={`relative overflow-hidden rounded-[var(--radius-card)] bg-sea ${className}`}>
+    <div
+      ref={boxRef}
+      className={`relative overflow-hidden bg-sea ${full.on ? "fixed inset-0 z-[80] flex items-center justify-center rounded-none" : `rounded-[var(--radius-card)] ${className}`}`}
+    >
       <svg
         ref={svgRef}
         viewBox={`0 0 ${W} ${geo.H}`}
         role="group"
         aria-label={ariaLabel}
         className="block h-auto w-full select-none"
-        style={{ maxHeight }}
+        style={full.on ? { maxHeight: "100dvh", height: "100%" } : { maxHeight }}
       >
         <g
           transform={`translate(${t.x},${t.y}) scale(${t.k})`}
@@ -315,6 +320,11 @@ export default function MapView({
           ))}
         </g>
       </svg>
+      <div className="absolute left-3 top-3">
+        <ZoomButton label={full.on ? "Exit full screen" : "Full screen"} onClick={full.toggle}>
+          {full.on ? <Minimize2 className="size-5" /> : <Maximize2 className="size-5" />}
+        </ZoomButton>
+      </div>
       {zoomable && (
         <div className="absolute right-3 top-3 flex flex-col gap-2">
           <ZoomButton label="Zoom in" onClick={() => zoomBy(1.6)}>
@@ -345,4 +355,35 @@ function ZoomButton({ label, onClick, children }: { label: string; onClick: () =
       {children}
     </button>
   );
+}
+
+/**
+ * Full screen for a map card. Uses the browser's Fullscreen API where it exists, and a
+ * fixed full-window layer otherwise (iPhone Safari can't make a div full screen).
+ */
+export function useFullscreen(ref: React.RefObject<HTMLElement | null>) {
+  const [on, setOn] = useState(false);
+  useEffect(() => {
+    const sync = () => {
+      if (!document.fullscreenElement) setOn(false);
+    };
+    const esc = (e: KeyboardEvent) => e.key === "Escape" && setOn(false);
+    document.addEventListener("fullscreenchange", sync);
+    window.addEventListener("keydown", esc);
+    return () => {
+      document.removeEventListener("fullscreenchange", sync);
+      window.removeEventListener("keydown", esc);
+    };
+  }, []);
+  const toggle = () => {
+    const el = ref.current;
+    if (on) {
+      if (document.fullscreenElement) void document.exitFullscreen();
+      setOn(false);
+      return;
+    }
+    setOn(true);
+    if (el?.requestFullscreen) el.requestFullscreen().catch(() => {});
+  };
+  return { on, toggle };
 }

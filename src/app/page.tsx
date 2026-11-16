@@ -3,8 +3,8 @@
 import Link from "next/link";
 import { ArrowRight, BookOpen, Compass, Flame, Globe2, Map as MapIcon, Puzzle, Star, Trophy } from "lucide-react";
 import { Mascot } from "@/components/Mascot";
-import { Card, LinkButton, ProgressBar, ShowMore } from "@/components/ui";
-import { GAMES } from "@/components/games/registry";
+import { Card, LinkButton, ProgressBar } from "@/components/ui";
+import { GameCards } from "@/components/games/GameCards";
 import { getDistricts, PILOT_STATE, STATE_COUNT, UT_COUNT } from "@/lib/content";
 import { levelFor, useProgress } from "@/lib/progress";
 
@@ -108,21 +108,7 @@ export default function Home() {
             See all
           </Link>
         </div>
-        <ShowMore
-          items={[...GAMES]}
-          initial={3}
-          noun="games"
-          className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3"
-          render={(g) => (
-            <Link key={g.id} href={g.href} className="rounded-[var(--radius-card)] bg-white p-4 shadow-[var(--shadow-card)] transition hover:-translate-y-1">
-              <div className="mb-2 grid size-12 place-items-center rounded-2xl" style={{ background: g.bg }}>
-                <g.icon className="size-6" style={{ color: g.fg }} />
-              </div>
-              <h3 className="text-lg font-bold leading-tight">{g.title}</h3>
-              <p className="text-sm text-ink-soft">{g.blurb}</p>
-            </Link>
-          )}
-        />
+        <GameCards ids={["identify-state", "arrange-states", "identify-country"]} />
       </section>
     </div>
   );

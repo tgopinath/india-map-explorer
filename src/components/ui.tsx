@@ -2,8 +2,9 @@
 
 import Link from "next/link";
 import { useState, type ComponentProps, type ReactNode } from "react";
-import { AlertTriangle, BadgeCheck, ChevronDown, ChevronUp, Info, Star } from "lucide-react";
+import { AlertTriangle, ArrowLeft, BadgeCheck, ChevronDown, ChevronUp, Info, Star, Volume2 } from "lucide-react";
 import type { DataStatus } from "@/lib/content";
+import { speakLines } from "@/lib/speech";
 
 type Tone = "primary" | "secondary" | "success" | "accent" | "ghost" | "white";
 
@@ -35,12 +36,51 @@ export function Card({ className = "", children, ...rest }: ComponentProps<"div"
   );
 }
 
-export function PageHeader({ title, subtitle, children }: { title: string; subtitle?: ReactNode; children?: ReactNode }) {
+/** Page title with an optional inline back button (a link, or a callback for in-page steps). */
+export function PageHeader({
+  title,
+  subtitle,
+  children,
+  back,
+  backLabel = "Go back",
+}: {
+  title: string;
+  subtitle?: ReactNode;
+  children?: ReactNode;
+  back?: string | (() => void);
+  backLabel?: string;
+}) {
+  const cls =
+    "mt-1 grid size-11 shrink-0 place-items-center rounded-full bg-white text-primary shadow-[0_3px_0_#d5dcea] transition hover:bg-primary-soft active:translate-y-px sm:size-12";
   return (
-    <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
-      <div>
-        <h1 className="text-3xl font-extrabold text-ink sm:text-4xl">{title}</h1>
-        {subtitle && <p className="mt-1 text-base text-ink-soft sm:text-lg">{subtitle}</p>}
+    <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
+      <div className="flex min-w-0 items-start gap-3">
+        {back &&
+          (typeof back === "string" ? (
+            <Link href={back} aria-label={backLabel} title={backLabel} className={cls}>
+              <ArrowLeft className="size-6" />
+            </Link>
+          ) : (
+            <button type="button" onClick={back} aria-label={backLabel} title={backLabel} className={cls}>
+              <ArrowLeft className="size-6" />
+            </button>
+          ))}
+        <div className="min-w-0">
+          <div className="flex items-center gap-3">
+            <h1 className="text-3xl font-extrabold leading-tight text-ink sm:text-4xl">{title}</h1>
+            <button
+              type="button"
+              onClick={() => speakLines([title, typeof subtitle === "string" ? subtitle : ""], { force: true })}
+              aria-label={`Read: ${title}`}
+              title="Read this out"
+              data-no-announce
+              className="grid size-10 shrink-0 place-items-center rounded-full bg-primary-soft text-primary transition hover:bg-primary hover:text-white active:translate-y-px"
+            >
+              <Volume2 className="size-5" />
+            </button>
+          </div>
+          {subtitle && <p className="mt-3 max-w-2xl text-base leading-relaxed text-ink-soft sm:text-lg">{subtitle}</p>}
+        </div>
       </div>
       {children}
     </div>
@@ -154,5 +194,23 @@ export function ShowMore<T>({
         </div>
       )}
     </>
+  );
+}
+
+/** Round speaker button that reads something aloud; sits on top of a card, not inside its link. */
+export function SpeakButton({ label, onSpeak, className = "", tone = "primary" }: { label: string; onSpeak: () => void; className?: string; tone?: "primary" | "white" }) {
+  return (
+    <button
+      type="button"
+      onClick={onSpeak}
+      aria-label={label}
+      title={label}
+      data-no-announce
+      className={`grid size-12 place-items-center rounded-full transition active:translate-y-px ${
+        tone === "white" ? "bg-white text-primary shadow-[0_3px_0_#d5dcea]" : "bg-primary text-white shadow-[0_3px_0_#2450bd]"
+      } ${className}`}
+    >
+      <Volume2 className="size-6" />
+    </button>
   );
 }

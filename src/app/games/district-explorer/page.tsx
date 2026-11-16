@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import QuizRunner from "@/components/QuizRunner";
-import { BackLink } from "@/components/games/BackLink";
 import { MascotSays } from "@/components/Mascot";
 import { Button, Card, DataStatusBadge, PageHeader } from "@/components/ui";
 import { getState, PILOT_STATE, STATES, stateName, districtsLabel } from "@/lib/content";
@@ -17,8 +16,7 @@ export default function DistrictExplorerGame() {
   const s = getState(stateId)!;
   return (
     <div>
-      <BackLink />
-      <PageHeader title="District Explorer" subtitle={playing ? `Find districts of ${stateName(stateId)}` : "You get a district name — find it on the map!"} />
+      <PageHeader back="/games" backLabel="All games" title="District Explorer" subtitle={playing ? `Find districts of ${stateName(stateId)}` : "You get a district name — find it on the map!"} />
       {playing ? (
         <QuizRunner
           key={stateId}

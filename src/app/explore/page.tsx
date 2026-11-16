@@ -4,9 +4,10 @@ import Link from "next/link";
 import { useMemo, useRef, useState } from "react";
 import { ArrowRight, Landmark, Map as MapIcon, Search, Users } from "lucide-react";
 import MapView from "@/components/MapView";
+import { GoogleMapFrame, MapModeSwitch, type MapMode } from "@/components/RealMap";
 import { MascotSays } from "@/components/Mascot";
 import { Card, Chip, LinkButton, Loading, PageHeader } from "@/components/ui";
-import { getState, REGION_COLOURS, STATES, stateName } from "@/lib/content";
+import { districtsLabel, getState, REGION_COLOURS, STATES, stateName } from "@/lib/content";
 import { STATE_FILLS, useIndiaMap, type RegionFeature } from "@/lib/geo";
 import { actions } from "@/lib/progress";
 import { speakLocal } from "@/lib/speech";
@@ -17,6 +18,7 @@ export default function ExplorePage() {
   const [hover, setHover] = useState<string | null>(null);
   const [query, setQuery] = useState("");
   const [colourBy, setColourBy] = useState<"state" | "region">("state");
+  const [mapMode, setMapMode] = useState<MapMode>("drawn");
   const panelRef = useRef<HTMLDivElement>(null);
 
   const matches = useMemo(() => {
@@ -30,8 +32,14 @@ export default function ExplorePage() {
     actions.exploreState(id);
     const st = getState(id)!;
     speakLocal(
-      `${st.name}. Its capital is ${st.capital.replace(/\(([^)]*)\)/g, "in $1")}.`,
-      st.ta && `${st.ta.name}. இதன் தலைநகரம் ${st.ta.capital}.`,
+      [
+        `${st.name}.`,
+        `It is a ${st.type === "ut" ? "Union Territory" : "state"} in ${st.region === "Islands" ? "the islands" : `${st.region} India`}.`,
+        `Its capital is ${st.capital.replace(/\(([^)]*)\)/g, "in $1")}.`,
+        `It has ${districtsLabel(st.districtCount)}.`,
+        st.neighbours.length ? `Its neighbours are ${st.neighbours.map(stateName).join(", ")}.` : "It has no land neighbours. There is only sea all around.",
+      ].join(" "),
+      st.ta && `${st.ta.name}. இதன் தலைநகரம் ${st.ta.capital}. ${st.districtCount} மாவட்டங்கள்.`,
     );
     setQuery("");
     if (window.innerWidth < 1024) window.setTimeout(() => panelRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 50);
@@ -43,48 +51,51 @@ export default function ExplorePage() {
 
   return (
     <div>
-      <PageHeader title="Explore India" subtitle="Tap a state to learn about it. Pinch or use + to zoom in." />
-
-      <div className="mb-4 flex flex-wrap items-center gap-3">
-        <div className="relative w-full max-w-sm">
-          <Search className="pointer-events-none absolute left-4 top-1/2 size-5 -translate-y-1/2 text-ink-soft" />
-          <input
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search a state or capital…"
-            aria-label="Search states"
-            className="w-full rounded-2xl border-2 border-line bg-white py-3 pl-11 pr-4 text-lg outline-none focus:border-primary"
-          />
-          {matches.length > 0 && (
-            <ul className="absolute z-20 mt-2 w-full overflow-hidden rounded-2xl bg-white shadow-[var(--shadow-card)]">
-              {matches.map((m) => (
-                <li key={m.id}>
-                  <button type="button" onClick={() => select(m.id)} className="flex w-full items-center justify-between px-4 py-3 text-left hover:bg-primary-soft">
-                    <span className="font-display text-lg font-semibold">{m.name}</span>
-                    <span className="text-sm text-ink-soft">{m.capital}</span>
-                  </button>
-                </li>
-              ))}
-            </ul>
-          )}
+      <PageHeader back="/"  title="Explore India" subtitle="Tap a state to learn about it. Pinch or use + to zoom in.">
+        <div className="flex w-full flex-wrap items-center gap-2 xl:w-auto xl:flex-nowrap xl:justify-end">
+          <div className="relative w-full sm:w-64">
+            <Search className="pointer-events-none absolute left-4 top-1/2 size-5 -translate-y-1/2 text-ink-soft" />
+            <input
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Search a state or capital…"
+              aria-label="Search states"
+              className="w-full rounded-2xl border-2 border-line bg-white py-3 pl-11 pr-4 text-lg outline-none focus:border-primary"
+            />
+            {matches.length > 0 && (
+              <ul className="absolute z-20 mt-2 w-full overflow-hidden rounded-2xl bg-white shadow-[var(--shadow-card)]">
+                {matches.map((m) => (
+                  <li key={m.id}>
+                    <button type="button" onClick={() => select(m.id)} className="flex w-full items-center justify-between px-4 py-3 text-left hover:bg-primary-soft">
+                      <span className="font-display text-lg font-semibold">{m.name}</span>
+                      <span className="text-sm text-ink-soft">{m.capital}</span>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+          <MapModeSwitch mode={mapMode} onChange={setMapMode} />
+          <div className="flex rounded-2xl bg-white p-1 shadow-[var(--shadow-card)]">
+            {(["state", "region"] as const).map((k) => (
+              <button
+                key={k}
+                type="button"
+                onClick={() => setColourBy(k)}
+                className={`rounded-xl px-4 py-2 font-display font-semibold ${colourBy === k ? "bg-primary text-white" : "text-ink-soft"}`}
+              >
+                {k === "state" ? "Colourful" : "By region"}
+              </button>
+            ))}
+          </div>
         </div>
-        <div className="flex rounded-2xl bg-white p-1 shadow-[var(--shadow-card)]">
-          {(["state", "region"] as const).map((k) => (
-            <button
-              key={k}
-              type="button"
-              onClick={() => setColourBy(k)}
-              className={`rounded-xl px-4 py-2 font-display font-semibold ${colourBy === k ? "bg-primary text-white" : "text-ink-soft"}`}
-            >
-              {k === "state" ? "Colourful" : "By region"}
-            </button>
-          ))}
-        </div>
-      </div>
+      </PageHeader>
 
       <div className="grid gap-5 lg:grid-cols-[1fr_340px]">
         <div>
-          {error ? (
+          {mapMode === "google" ? (
+            <GoogleMapFrame query={s ? `${s.name}, India` : "India"} zoom={s ? (s.districtCount <= 3 ? 9 : 6) : 4} title="Google Map of India" />
+          ) : error ? (
             <Card>Couldn&apos;t load the map. Please check your connection and try again.</Card>
           ) : !features ? (
             <Loading />

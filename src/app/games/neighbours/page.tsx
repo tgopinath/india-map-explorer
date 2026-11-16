@@ -107,8 +107,7 @@ export default function NeighbourChallenge() {
 
   return (
     <div>
-      <BackLink />
-      <PageHeader title="Neighbour Challenge" subtitle="Tap every state that touches the orange one." />
+      <PageHeader back="/games" backLabel="All games" title="Neighbour Challenge" subtitle="Tap every state that touches the orange one." />
       {!features || !s ? (
         <Loading />
       ) : (

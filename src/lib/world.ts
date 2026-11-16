@@ -64,3 +64,11 @@ export function popText(n: number) {
 }
 
 export const countriesIn = (c: Continent) => COUNTRIES.filter((x) => x.continent === c);
+
+/** Population line for a country card, with plain words where a number would confuse children. */
+export function peopleText(c: Country) {
+  if (c.name === "Antarctica")
+    return "Nobody lives here all year. Only scientists visit research stations — about 4 thousand in summer, and fewer in winter.";
+  if (c.pop > 0 && c.pop < 1000) return `Very few people — about ${c.pop}`;
+  return popText(c.pop);
+}

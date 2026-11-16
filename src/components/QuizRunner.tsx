@@ -218,6 +218,7 @@ export default function QuizRunner({ make, stateId, onFinish, backHref, backLabe
               <button
                 type="button"
                 aria-label="Read the question"
+                data-no-announce
                 title="Read the question"
                 onClick={() => speak(q.kind === "mcq" ? `${q.prompt} ${q.options.join(". ")}.` : q.prompt, { force: true })}
                 className="grid size-11 shrink-0 place-items-center rounded-full bg-primary text-white shadow-[0_3px_0_#2450bd]"
@@ -235,6 +236,7 @@ export default function QuizRunner({ make, stateId, onFinish, backHref, backLabe
                     <button
                       type="button"
                       aria-label={`Say ${o}`}
+                      data-no-announce
                       onClick={() => speakLocal(o, taByName.get(o), { force: true })}
                       className="grid size-11 shrink-0 place-items-center rounded-full bg-primary-soft text-primary"
                     >
@@ -263,6 +265,18 @@ export default function QuizRunner({ make, stateId, onFinish, backHref, backLabe
             )}
             {q.kind === "tap" && !answered && <p className="text-ink-soft">Tap the map. Use + to zoom in on small places.</p>}
           </Card>
+          {answered && (
+            <div
+              role="status"
+              className={`animate-pop rounded-[var(--radius-card)] p-5 text-white shadow-[var(--shadow-card)] ${picked === q.answer ? "bg-success" : "bg-accent"}`}
+            >
+              <p className="flex items-center gap-2 font-display text-lg font-bold text-white/90">
+                {picked === q.answer ? <Check className="size-6" strokeWidth={3} /> : <X className="size-6" strokeWidth={3} />}
+                {picked === q.answer ? "Correct!" : "The answer is"}
+              </p>
+              <p className="mt-1 font-display text-4xl font-extrabold leading-tight">{q.kind === "tap" ? regionName(q.answer) : q.answer}</p>
+            </div>
+          )}
           {say && <MascotSays say mood={say.mood} size={60}>{say.text}</MascotSays>}
           {answered && (
             <Button className="w-full animate-pop" onClick={next}>

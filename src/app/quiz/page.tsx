@@ -1,12 +1,11 @@
 "use client";
 
-import Link from "next/link";
 import { useState } from "react";
-import { ArrowLeft, Lock, Medal, Rocket, Sprout } from "lucide-react";
+import { Lock, Medal, Rocket, Sprout } from "lucide-react";
 import QuizRunner from "@/components/QuizRunner";
 import { MascotSays } from "@/components/Mascot";
 import { Card, PageHeader, Stars } from "@/components/ui";
-import { GAMES } from "@/components/games/registry";
+import { GameCards } from "@/components/games/GameCards";
 import { PILOT_STATE, STATES, stateName } from "@/lib/content";
 import { capitalMcqQs, districtMcqQs, identifyStateQs, neighbourMcqQs } from "@/lib/questions";
 import { actions, unlocks, useProgress, type QuizLevel } from "@/lib/progress";
@@ -35,10 +34,9 @@ export default function QuizPage() {
           : () => districtMcqQs(stateId, 10);
     return (
       <div>
-        <button type="button" onClick={() => setLevel(null)} className="mb-3 inline-flex items-center gap-1 font-display font-bold text-primary">
-          <ArrowLeft className="size-5" /> All quizzes
-        </button>
         <PageHeader
+          back={() => setLevel(null)}
+          backLabel="All quizzes"
           title={`${LEVELS.find((l) => l.id === level)!.title} Quiz`}
           subtitle={level === "advanced" ? `Districts of ${stateName(stateId)}` : "10 questions · faster answers earn bonus points"}
         />
@@ -56,13 +54,13 @@ export default function QuizPage() {
 
   return (
     <div>
-      <PageHeader title="Quiz Challenge" subtitle="Earn 2 stars on a level to unlock the next one." />
+      <PageHeader back="/" title="Quiz Challenge" subtitle="Earn 2 stars on a level to unlock the next one." />
       <div className="grid gap-4 md:grid-cols-3">
         {LEVELS.map((l) => {
           const open = unlocks.quiz(p, l.id);
           const best = p.quizBest[l.id];
           return (
-            <Card key={l.id} className={`flex flex-col gap-3 ${open ? "" : "opacity-70"}`}>
+            <Card key={l.id} className="flex flex-col gap-3">
               <div className={`grid size-16 place-items-center rounded-2xl ${l.bg}`}>
                 {open ? <l.icon className={`size-8 ${l.fg}`} /> : <Lock className="size-7 text-ink-soft" />}
               </div>
@@ -95,9 +93,10 @@ export default function QuizPage() {
                 type="button"
                 disabled={!open}
                 onClick={() => setLevel(l.id)}
-                className="mt-auto rounded-2xl bg-primary px-5 py-3 font-display text-lg font-bold text-white shadow-[0_4px_0_#2450bd] transition active:translate-y-[3px] active:shadow-none disabled:bg-line disabled:text-ink-soft disabled:shadow-none"
+                className="mt-auto flex items-center justify-center gap-2 rounded-2xl bg-primary px-5 py-3 font-display text-lg font-bold text-white shadow-[0_4px_0_#2450bd] transition active:translate-y-[3px] active:shadow-none disabled:cursor-not-allowed disabled:border-2 disabled:border-dashed disabled:border-[#c3cde0] disabled:bg-bg disabled:text-ink disabled:shadow-none"
               >
-                {open ? "Start" : l.id === "intermediate" ? "Get 2★ in Beginner" : "Get 2★ in Intermediate"}
+                {!open && <Lock className="size-5 text-ink-soft" />}
+                {open ? "Start" : l.id === "intermediate" ? "Get 2★ in Beginner to unlock" : "Get 2★ in Intermediate to unlock"}
               </button>
             </Card>
           );
@@ -106,14 +105,7 @@ export default function QuizPage() {
 
       <div className="mt-8">
         <MascotSays mood="think" className="mb-3">Want something quicker? Try a mini game!</MascotSays>
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
-          {GAMES.map((g) => (
-            <Link key={g.id} href={g.href} className="rounded-3xl bg-white p-4 shadow-[var(--shadow-card)] transition hover:-translate-y-0.5">
-              <g.icon className="mb-2 size-7" style={{ color: g.fg }} />
-              <p className="font-display text-lg font-bold leading-tight">{g.title}</p>
-            </Link>
-          ))}
-        </div>
+        <GameCards />
       </div>
     </div>
   );

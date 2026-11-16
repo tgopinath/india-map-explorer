@@ -1,26 +1,59 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowRight, Star } from "lucide-react";
+import { ArrowRight, Star, Volume2 } from "lucide-react";
+import { IndiaOutlineDefs, StateLocator } from "@/components/StateLocator";
 import { Mascot } from "@/components/Mascot";
 import { DataStatusBadge, PageHeader, ProgressBar, ShowMore } from "@/components/ui";
-import { getState, PILOT_STATE, STATES, districtsLabel } from "@/lib/content";
+import { getState, PILOT_STATE, REGION_COLOURS, STATES, districtsLabel, type StateInfo } from "@/lib/content";
+import { useIndiaMap } from "@/lib/geo";
+import { speakLocal } from "@/lib/speech";
 import { useProgress } from "@/lib/progress";
+
+const sayDistricts = (s: StateInfo) =>
+  speakLocal(
+    `${s.name} has ${districtsLabel(s.districtCount)}.`,
+    s.ta && `${s.ta.name}: ${s.districtCount} ${s.districtCount === 1 ? "மாவட்டம்" : "மாவட்டங்கள்"}.`,
+    { force: true },
+  );
+
+function Speaker({ s, className = "" }: { s: StateInfo; className?: string }) {
+  return (
+    <button
+      type="button"
+      onClick={() => sayDistricts(s)}
+      aria-label={`Hear ${s.name}`}
+      title={`Hear ${s.name}`}
+      data-no-announce
+      className={`grid size-12 place-items-center rounded-full bg-primary text-white shadow-[0_3px_0_#2450bd] transition active:translate-y-px ${className}`}
+    >
+      <Volume2 className="size-6" />
+    </button>
+  );
+}
 
 export default function DistrictsHome() {
   const p = useProgress();
+  const { features } = useIndiaMap();
   const pilot = getState(PILOT_STATE)!;
   const learned = (id: string) => p.districtsLearned[id]?.length ?? 0;
 
   return (
     <div>
-      <PageHeader title="Learn Districts" subtitle="Pick a state and discover its districts one by one." />
+      <PageHeader back="/"  title="Learn Districts" subtitle="Pick a state and discover its districts one by one." />
+      {features && <IndiaOutlineDefs features={features} />}
 
+      <div className="relative mb-6">
       <Link
         href={`/districts/${pilot.id}`}
-        className="mb-6 flex flex-col gap-4 overflow-hidden rounded-[2rem] bg-secondary p-6 shadow-[var(--shadow-card)] transition hover:-translate-y-1 sm:flex-row sm:items-center"
+        className="flex flex-col gap-4 overflow-hidden rounded-[2rem] bg-secondary p-6 pr-20 shadow-[var(--shadow-card)] transition hover:-translate-y-1 sm:flex-row sm:items-center"
       >
-        <Mascot mood="cheer" size={110} />
+        <div className="flex items-center gap-2">
+          <Mascot mood="cheer" size={96} />
+          <div className="rounded-3xl bg-white/70 p-2">
+            {features ? <StateLocator id={pilot.id} features={features} colour="#356ae6" size={84} /> : <div className="h-[94px] w-[84px]" />}
+          </div>
+        </div>
         <div className="flex-1">
           <p className="flex items-center gap-1 font-display font-bold text-[#8a5b00]">
             <Star className="size-4 fill-current" /> Featured state
@@ -34,24 +67,37 @@ export default function DistrictsHome() {
           Start <ArrowRight className="size-5" />
         </span>
       </Link>
+      <Speaker s={pilot} className="absolute right-4 top-4" />
+      </div>
 
       <h2 className="mb-3 text-2xl font-bold">All states & Union Territories</h2>
       <ShowMore
         items={STATES.filter((s) => s.id !== PILOT_STATE)}
         initial={6}
         noun="states"
-        className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3"
+        className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3"
         render={(s) => (
-          <Link key={s.id} href={`/districts/${s.id}`} className="rounded-3xl bg-white p-4 shadow-[var(--shadow-card)] transition hover:-translate-y-0.5">
-            <div className="flex items-baseline justify-between gap-2">
-              <h3 className="text-lg font-bold leading-tight">{s.name}</h3>
-              <span className="shrink-0 text-sm font-bold text-ink-soft">{districtsLabel(s.districtCount)}</span>
-            </div>
-            <div className="mt-2 flex items-center justify-between gap-2">
-              <DataStatusBadge status={s.dataStatus} issues={s.issues} />
-              {learned(s.id) > 0 && <span className="text-sm font-bold text-success">{learned(s.id)} learned</span>}
-            </div>
-          </Link>
+          <div key={s.id} className="relative">
+            <Link
+              href={`/districts/${s.id}`}
+              aria-label={`${s.name}, ${districtsLabel(s.districtCount)}`}
+              className="flex h-full items-center gap-3 rounded-3xl bg-white p-3 pr-16 shadow-[var(--shadow-card)] transition hover:-translate-y-0.5"
+            >
+              <div className="grid shrink-0 place-items-center rounded-2xl p-1" style={{ background: `${REGION_COLOURS[s.region]}55` }}>
+                {features ? <StateLocator id={s.id} features={features} colour={s.type === "ut" ? "#ff6a33" : "#356ae6"} size={64} /> : <div className="h-[72px] w-16" />}
+              </div>
+              <div className="min-w-0 flex-1">
+                <h3 className="text-lg font-bold leading-tight">{s.name}</h3>
+                {s.ta && <p lang="ta" className="text-sm font-semibold text-primary">{s.ta.name}</p>}
+                <p className="text-sm font-bold text-ink-soft">{districtsLabel(s.districtCount)}</p>
+                <div className="mt-1.5 flex flex-wrap items-center gap-2">
+                  <DataStatusBadge status={s.dataStatus} issues={s.issues} />
+                  {learned(s.id) > 0 && <span className="text-sm font-bold text-success">{learned(s.id)} learned</span>}
+                </div>
+              </div>
+            </Link>
+            <Speaker s={s} className="absolute right-3 top-3" />
+          </div>
         )}
       />
     </div>

@@ -1,60 +1,96 @@
 "use client";
 
 import Link from "next/link";
-import { Globe2, Puzzle } from "lucide-react";
+import { Globe2 } from "lucide-react";
 import { Mascot } from "@/components/Mascot";
-import { DataStatusBadge, PageHeader, ShowMore, Stars } from "@/components/ui";
-import { PILOT_STATE, STATES, districtsLabel } from "@/lib/content";
+import { ContinentLocator, IndiaColoured, IndiaOutlineDefs, StateLocator, WorldOutlineDefs } from "@/components/StateLocator";
+import { DataStatusBadge, PageHeader, ShowMore, SpeakButton, Stars } from "@/components/ui";
+import { PILOT_STATE, REGION_COLOURS, STATES, districtsLabel, getState } from "@/lib/content";
+import { STATE_FILLS, useIndiaMap, useWorldMap } from "@/lib/geo";
 import { useProgress, type Progress } from "@/lib/progress";
-import { CONTINENT_BOX, CONTINENTS, countriesIn } from "@/lib/world";
+import { speak, speakLocal } from "@/lib/speech";
+import { CONTINENT_BOX, CONTINENTS, countriesIn, getCountry } from "@/lib/world";
 
 const best = (p: Progress, key: string) =>
   Math.max(0, ...(["easy", "medium", "hard"] as const).map((l) => p.puzzles[`${key}:${l}`]?.stars ?? 0));
+const continentOf = (id: string) => getCountry(id)?.continent;
 
 export default function PuzzleHub() {
   const p = useProgress();
+  const india = useIndiaMap();
+  const world = useWorldMap();
+  const pilot = getState(PILOT_STATE)!;
+  const sayState = (id: string) => {
+    const s = getState(id)!;
+    speakLocal(`${s.name} puzzle. Put ${districtsLabel(s.districtCount)} in the right place.`, s.ta && `${s.ta.name}: ${s.districtCount} மாவட்டங்கள்.`, { force: true });
+  };
+
   return (
     <div>
-      <PageHeader title="Map Puzzle" subtitle="Drag each name card onto the right spot on the map." />
+      <PageHeader back="/"  title="Map Puzzle" subtitle="Drag each name card onto the right spot on the map." />
+      {india.features && <IndiaOutlineDefs features={india.features} />}
+      {world.features && <WorldOutlineDefs features={world.features} continentOf={continentOf} />}
+
       <div className="mb-6 grid gap-4 md:grid-cols-2">
-        <Link href={`/puzzle/${PILOT_STATE}`} className="flex items-center gap-4 rounded-[2rem] bg-accent p-6 text-white shadow-[var(--shadow-card)] transition hover:-translate-y-1">
-          <Mascot mood="cheer" size={96} />
-          <div>
-            <p className="font-display font-bold text-white/80">Featured</p>
-            <h2 className="text-2xl font-extrabold">Tamil Nadu District Challenge</h2>
-            <p className="text-white/85">38 districts · Easy, Medium & Hard</p>
-            <div className="mt-2"><Stars count={best(p, PILOT_STATE)} /></div>
-          </div>
-        </Link>
-        <Link href="/puzzle/india" className="flex items-center gap-4 rounded-[2rem] bg-primary p-6 text-white shadow-[var(--shadow-card)] transition hover:-translate-y-1">
-          <div className="grid size-24 shrink-0 place-items-center rounded-3xl bg-white/15">
-            <Puzzle className="size-12" />
-          </div>
-          <div>
-            <p className="font-display font-bold text-white/80">India</p>
-            <h2 className="text-2xl font-extrabold">Arrange the States</h2>
-            <p className="text-white/85">28 states & 8 Union Territories</p>
-            <div className="mt-2"><Stars count={best(p, "india")} /></div>
-          </div>
-        </Link>
+        <div className="relative">
+          <Link href={`/puzzle/${PILOT_STATE}`} className="flex h-full items-center gap-4 rounded-[2rem] bg-accent p-6 pr-20 text-white shadow-[var(--shadow-card)] transition hover:-translate-y-1">
+            <div className="flex shrink-0 items-center">
+              <Mascot mood="cheer" size={72} />
+              <div className="rounded-3xl bg-white/85 p-1.5">
+                {india.features ? <StateLocator id={pilot.id} features={india.features} colour="#356ae6" size={72} /> : <div className="h-20 w-[72px]" />}
+              </div>
+            </div>
+            <div>
+              <p className="font-display font-bold text-white/80">Featured</p>
+              <h2 className="text-2xl font-extrabold">Tamil Nadu District Challenge</h2>
+              <p className="text-white/85">38 districts · Easy, Medium & Hard</p>
+              <div className="mt-2"><Stars count={best(p, PILOT_STATE)} /></div>
+            </div>
+          </Link>
+          <SpeakButton label="Hear Tamil Nadu puzzle" onSpeak={() => sayState(PILOT_STATE)} tone="white" className="absolute right-4 top-4" />
+        </div>
+        <div className="relative">
+          <Link href="/puzzle/india" className="flex h-full items-center gap-4 rounded-[2rem] bg-primary p-6 pr-20 text-white shadow-[var(--shadow-card)] transition hover:-translate-y-1">
+            <div className="grid shrink-0 place-items-center rounded-3xl bg-white/90 p-2">
+              {india.features ? <IndiaColoured features={india.features} fills={STATE_FILLS} size={80} /> : <div className="h-[90px] w-20" />}
+            </div>
+            <div>
+              <p className="font-display font-bold text-white/80">India</p>
+              <h2 className="text-2xl font-extrabold">Arrange the States</h2>
+              <p className="text-white/85">28 states & 8 Union Territories</p>
+              <div className="mt-2"><Stars count={best(p, "india")} /></div>
+            </div>
+          </Link>
+          <SpeakButton
+            label="Hear Arrange the States"
+            onSpeak={() => speak("Arrange the States. Put India's 28 states and 8 Union Territories in the right place.", { force: true })}
+            tone="white"
+            className="absolute right-4 top-4"
+          />
+        </div>
       </div>
 
       <h2 id="world" className="mb-3 flex scroll-mt-20 items-center gap-2 text-2xl font-bold">
         <Globe2 className="size-6 text-[#1f8a7a]" /> World puzzles
       </h2>
-      <div className="mb-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="mb-8 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
         {CONTINENTS.filter((c) => CONTINENT_BOX[c.id]).map((c) => (
-          <Link key={c.id} href={`/puzzle/world-${c.slug}`} className="relative overflow-hidden rounded-3xl bg-white p-4 shadow-[var(--shadow-card)] transition hover:-translate-y-0.5">
-            <span className="absolute inset-y-0 left-0 w-2" style={{ background: c.colour }} />
-            <div className="flex items-start justify-between gap-2">
-              <div>
-                <h3 className="text-lg font-bold leading-tight">{c.id}</h3>
-                <p className="text-sm text-ink-soft">{countriesIn(c.id).length} countries & territories</p>
+          <div key={c.id} className="relative">
+            <Link href={`/puzzle/world-${c.slug}`} className="flex h-full flex-col overflow-hidden rounded-3xl bg-white shadow-[var(--shadow-card)] transition hover:-translate-y-0.5">
+              <div className="grid h-28 place-items-center" style={{ background: `${c.colour}55` }}>
+                {world.features ? <ContinentLocator continent={c.id} features={world.features} continentOf={continentOf} colour="#356ae6" size={170} /> : <div className="h-[90px] w-[170px]" />}
               </div>
-              <Stars count={best(p, `world-${c.slug}`)} size="size-5" />
-            </div>
-            <p className="mt-1 text-sm text-ink-soft">{c.blurb}</p>
-          </Link>
+              <div className="p-4">
+                <div className="flex items-start justify-between gap-2">
+                  <h3 className="text-lg font-bold leading-tight">{c.id}</h3>
+                  <Stars count={best(p, `world-${c.slug}`)} size="size-5" />
+                </div>
+                <p className="text-sm text-ink-soft">{countriesIn(c.id).length} countries & territories</p>
+                <p className="mt-1 text-sm text-ink-soft">{c.blurb}</p>
+              </div>
+            </Link>
+            <SpeakButton label={`Hear ${c.id}`} onSpeak={() => speak(`${c.id} puzzle. ${c.blurb}.`, { force: true })} className="absolute right-3 top-3" />
+          </div>
         ))}
       </div>
 
@@ -63,18 +99,25 @@ export default function PuzzleHub() {
         items={STATES.filter((s) => s.id !== PILOT_STATE)}
         initial={6}
         noun="state puzzles"
-        className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3"
+        className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3"
         render={(s) => (
-          <Link key={s.id} href={`/puzzle/${s.id}`} className="rounded-3xl bg-white p-4 shadow-[var(--shadow-card)] transition hover:-translate-y-0.5">
-            <div className="flex items-start justify-between gap-2">
-              <div>
-                <h3 className="text-lg font-bold leading-tight">{s.name}</h3>
-                <p className="text-sm text-ink-soft">{districtsLabel(s.districtCount)}</p>
+          <div key={s.id} className="relative">
+            <Link href={`/puzzle/${s.id}`} className="flex h-full items-center gap-3 rounded-3xl bg-white p-3 pr-16 shadow-[var(--shadow-card)] transition hover:-translate-y-0.5">
+              <div className="grid shrink-0 place-items-center rounded-2xl p-1" style={{ background: `${REGION_COLOURS[s.region]}55` }}>
+                {india.features ? <StateLocator id={s.id} features={india.features} colour={s.type === "ut" ? "#ff6a33" : "#356ae6"} size={64} /> : <div className="h-[72px] w-16" />}
               </div>
-              <Stars count={best(p, s.id)} size="size-5" />
-            </div>
-            <div className="mt-2"><DataStatusBadge status={s.dataStatus} issues={s.issues} /></div>
-          </Link>
+              <div className="min-w-0 flex-1">
+                <h3 className="text-lg font-bold leading-tight">{s.name}</h3>
+                {s.ta && <p lang="ta" className="text-sm font-semibold text-primary">{s.ta.name}</p>}
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-ink-soft">{districtsLabel(s.districtCount)}</span>
+                  <Stars count={best(p, s.id)} size="size-4" />
+                </div>
+                <div className="mt-1.5"><DataStatusBadge status={s.dataStatus} issues={s.issues} /></div>
+              </div>
+            </Link>
+            <SpeakButton label={`Hear ${s.name}`} onSpeak={() => sayState(s.id)} className="absolute right-3 top-3" />
+          </div>
         )}
       />
     </div>

@@ -4,17 +4,26 @@ import Link from "next/link";
 import { useMemo, useRef, useState } from "react";
 import { ArrowRight, Globe2, Landmark, Puzzle, Search, Users, Volume2 } from "lucide-react";
 import MapView, { type RegionMark } from "@/components/MapView";
+import { GoogleMapFrame, MapModeSwitch, type MapMode } from "@/components/RealMap";
 import { MascotSays } from "@/components/Mascot";
 import { Card, Chip, LinkButton, Loading, PageHeader, ShowMore } from "@/components/ui";
 import { STATE_FILLS, useWorldMap, type RegionFeature } from "@/lib/geo";
 import { actions } from "@/lib/progress";
 import { speak } from "@/lib/speech";
-import { CONTINENTS, continentColour, COUNTRIES, countryName, flagOf, getCountry, isCountry, popText, type Continent } from "@/lib/world";
+import { CONTINENTS, continentColour, COUNTRIES, countryName, flagOf, getCountry, isCountry, peopleText, type Continent } from "@/lib/world";
 
 const describe = (id: string) => {
   const c = getCountry(id)!;
-  const cap = c.capitals.length ? ` Its capital is ${c.capitals.join(" and ")}.` : "";
-  return `${c.name}. It is in ${c.continent}.${cap}`;
+  const parts = [`${c.name}.`];
+  if (c.name !== c.continent) parts.push(`It is in ${c.continent}${c.kind === "Dependency" ? `, and is part of ${c.sovereign}` : ""}.`);
+  if (c.capitals.length) parts.push(`${c.capitals.length > 1 ? "Its capitals are" : "Its capital is"} ${c.capitals.join(" and ")}.`);
+  parts.push(`People: ${peopleText(c)}.`);
+  parts.push(
+    c.neighbours.length
+      ? `Its neighbours are ${c.neighbours.map((n) => countryName(n)).join(", ")}.`
+      : "It has no land neighbours. There is only sea all around.",
+  );
+  return parts.join(" ").replace(/\.\./g, ".");
 };
 
 export default function WorldPage() {
@@ -23,6 +32,7 @@ export default function WorldPage() {
   const [hover, setHover] = useState<string | null>(null);
   const [query, setQuery] = useState("");
   const [colourBy, setColourBy] = useState<"country" | "continent">("continent");
+  const [mapMode, setMapMode] = useState<MapMode>("drawn");
   const [continent, setContinent] = useState<Continent | null>(null);
   const panelRef = useRef<HTMLDivElement>(null);
 
@@ -56,47 +66,48 @@ export default function WorldPage() {
 
   return (
     <div>
-      <PageHeader title="Explore the World" subtitle="India is orange. Tap any country to visit it!" />
-
-      <div className="mb-4 flex flex-wrap items-center gap-3">
-        <div className="relative w-full max-w-sm">
-          <Search className="pointer-events-none absolute left-4 top-1/2 size-5 -translate-y-1/2 text-ink-soft" />
-          <input
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search a country or capital…"
-            aria-label="Search countries"
-            className="w-full rounded-2xl border-2 border-line bg-white py-3 pl-11 pr-4 text-lg outline-none focus:border-primary"
-          />
-          {matches.length > 0 && (
-            <ul className="absolute z-20 mt-2 w-full overflow-hidden rounded-2xl bg-white shadow-[var(--shadow-card)]">
-              {matches.map((m) => (
-                <li key={m.id}>
-                  <button type="button" onClick={() => select(m.id)} className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left hover:bg-primary-soft">
-                    <span className="font-display text-lg font-semibold">
-                      <span aria-hidden className="mr-2">{flagOf(m)}</span>
-                      {m.name}
-                    </span>
-                    <span className="truncate text-sm text-ink-soft">{m.capitals[0]}</span>
-                  </button>
-                </li>
-              ))}
-            </ul>
-          )}
+      <PageHeader back="/"  title="Explore the World" subtitle="India is orange. Tap any country to visit it!">
+        <div className="flex w-full flex-wrap items-center gap-2 xl:w-auto xl:flex-nowrap xl:justify-end">
+          <div className="relative w-full sm:w-64">
+            <Search className="pointer-events-none absolute left-4 top-1/2 size-5 -translate-y-1/2 text-ink-soft" />
+            <input
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Search a country or capital…"
+              aria-label="Search countries"
+              className="w-full rounded-2xl border-2 border-line bg-white py-3 pl-11 pr-4 text-lg outline-none focus:border-primary"
+            />
+            {matches.length > 0 && (
+              <ul className="absolute z-20 mt-2 w-full overflow-hidden rounded-2xl bg-white shadow-[var(--shadow-card)]">
+                {matches.map((m) => (
+                  <li key={m.id}>
+                    <button type="button" onClick={() => select(m.id)} className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left hover:bg-primary-soft">
+                      <span className="font-display text-lg font-semibold">
+                        <span aria-hidden className="mr-2">{flagOf(m)}</span>
+                        {m.name}
+                      </span>
+                      <span className="truncate text-sm text-ink-soft">{m.capitals[0]}</span>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+          <MapModeSwitch mode={mapMode} onChange={setMapMode} />
+          <div className="flex rounded-2xl bg-white p-1 shadow-[var(--shadow-card)]">
+            {(["continent", "country"] as const).map((k) => (
+              <button
+                key={k}
+                type="button"
+                onClick={() => setColourBy(k)}
+                className={`rounded-xl px-4 py-2 font-display font-semibold ${colourBy === k ? "bg-primary text-white" : "text-ink-soft"}`}
+              >
+                {k === "continent" ? "By continent" : "Colourful"}
+              </button>
+            ))}
+          </div>
         </div>
-        <div className="flex rounded-2xl bg-white p-1 shadow-[var(--shadow-card)]">
-          {(["continent", "country"] as const).map((k) => (
-            <button
-              key={k}
-              type="button"
-              onClick={() => setColourBy(k)}
-              className={`rounded-xl px-4 py-2 font-display font-semibold ${colourBy === k ? "bg-primary text-white" : "text-ink-soft"}`}
-            >
-              {k === "continent" ? "By continent" : "Colourful"}
-            </button>
-          ))}
-        </div>
-      </div>
+      </PageHeader>
 
       <div className="mb-4 flex flex-wrap gap-2">
         {CONTINENTS.map((k) => (
@@ -122,7 +133,9 @@ export default function WorldPage() {
 
       <div className="grid gap-5 lg:grid-cols-[1fr_340px]">
         <div>
-          {error ? (
+          {mapMode === "google" ? (
+            <GoogleMapFrame query={c ? c.name : "World"} zoom={c ? (c.pop > 1e8 ? 3 : 5) : 2} title="Google Map of the world" />
+          ) : error ? (
             <Card>Couldn&apos;t load the world map. Please check your connection and try again.</Card>
           ) : !features ? (
             <Loading label="Spinning the globe…" />
@@ -161,16 +174,19 @@ export default function WorldPage() {
                   {flagOf(c)}
                 </span>
                 <div className="min-w-0 flex-1">
-                  <Chip className="bg-primary-soft text-primary">
-                    {c.continent}
-                    {c.kind === "Dependency" ? ` · part of ${c.sovereign}` : ""}
-                  </Chip>
+                  {c.continent !== c.name && (
+                    <Chip className="bg-primary-soft text-primary">
+                      {c.continent}
+                      {c.kind === "Dependency" ? ` · part of ${c.sovereign}` : ""}
+                    </Chip>
+                  )}
                   <h2 className="mt-1 text-3xl font-extrabold leading-tight">{c.name}</h2>
-                  <p className="text-sm text-ink-soft">{c.subregion}</p>
+                  {c.subregion !== c.name && c.subregion !== c.continent && <p className="text-sm text-ink-soft">{c.subregion}</p>}
                 </div>
                 <button
                   type="button"
                   aria-label="Listen again"
+                  data-no-announce
                   title="Listen again"
                   onClick={() => speak(describe(c.id), { force: true })}
                   className="grid size-11 shrink-0 place-items-center rounded-full bg-primary text-white shadow-[0_3px_0_#2450bd]"
@@ -192,7 +208,7 @@ export default function WorldPage() {
                   <Globe2 className="mt-1 size-5 shrink-0 text-success" />
                   <div>
                     <dt className="text-sm font-bold text-ink-soft">People</dt>
-                    <dd className="font-semibold">{popText(c.pop)}</dd>
+                    <dd className="font-semibold">{peopleText(c)}</dd>
                   </div>
                 </div>
                 <div className="flex gap-3">

@@ -48,7 +48,7 @@ export default function ParentPage() {
   if (!open) {
     return (
       <div className="mx-auto max-w-md">
-        <PageHeader title="Parent Corner" />
+        <PageHeader back="/" title="Parent Corner" />
         <Card className="space-y-4">
           <p className="flex items-center gap-2 font-display text-lg font-bold"><Lock className="size-5 text-primary" /> Grown-ups only</p>
           <p className="text-ink-soft">To continue, answer this question:</p>
@@ -84,7 +84,7 @@ export default function ParentPage() {
 
   return (
     <div className="space-y-5">
-      <PageHeader title="Parent Dashboard" subtitle="A simple view of your child's learning on this device." />
+      <PageHeader back="/" title="Parent Dashboard" subtitle="A simple view of your child's learning on this device." />
 
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <Metric label="Overall progress" value={`${Math.round(overall(p) * 100)}%`} bar={overall(p)} />

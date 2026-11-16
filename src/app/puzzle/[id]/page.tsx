@@ -1,7 +1,5 @@
 import { Suspense } from "react";
-import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft } from "lucide-react";
 import PuzzleGame from "@/components/PuzzleGame";
 import { Loading, PageHeader } from "@/components/ui";
 import { getState, STATES } from "@/lib/content";
@@ -32,10 +30,7 @@ function Content({ id }: { id: string }) {
   if (!h) notFound();
   return (
     <div>
-      <Link href="/puzzle" className="mb-3 inline-flex items-center gap-1 font-display font-bold text-primary">
-        <ArrowLeft className="size-5" /> All puzzles
-      </Link>
-      <PageHeader title={h.title} subtitle={h.subtitle} />
+      <PageHeader back="/puzzle" backLabel="All puzzles" title={h.title} subtitle={h.subtitle} />
       <PuzzleGame key={id} mapKey={id} />
     </div>
   );

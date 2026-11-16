@@ -1,9 +1,9 @@
 "use client";
 
-import Link from "next/link";
 import { useMemo, useRef, useState } from "react";
-import { ArrowLeft, Check, Volume2, ChevronLeft, ChevronRight, Building2, GraduationCap, Puzzle, Search, Sparkles, X } from "lucide-react";
+import { Check, Volume2, ChevronLeft, ChevronRight, Building2, GraduationCap, Puzzle, Search, Sparkles, X } from "lucide-react";
 import MapView from "@/components/MapView";
+import { GoogleMapFrame, MapModeSwitch, type MapMode } from "@/components/RealMap";
 import { Mascot, MascotSays } from "@/components/Mascot";
 import { Button, Card, DataStatusBadge, LinkButton, Loading, PageHeader, ProgressBar, ShowMore } from "@/components/ui";
 import { getDistricts, getState, districtsLabel } from "@/lib/content";
@@ -21,6 +21,7 @@ export default function DistrictExplorer({ id }: { id: string }) {
 
   const [selected, setSelected] = useState<string | null>(null);
   const [tour, setTour] = useState(false);
+  const [mapMode, setMapMode] = useState<MapMode>("drawn");
   const [q, setQ] = useState("");
   const cardRef = useRef<HTMLDivElement>(null);
 
@@ -52,10 +53,9 @@ export default function DistrictExplorer({ id }: { id: string }) {
 
   return (
     <div>
-      <Link href="/districts" className="mb-3 inline-flex items-center gap-1 font-display font-bold text-primary">
-        <ArrowLeft className="size-5" /> All states
-      </Link>
       <PageHeader
+        back="/districts"
+        backLabel="All states"
         title={`${s.name} districts`}
         subtitle={
           <span className="flex flex-wrap items-center gap-2">
@@ -64,6 +64,7 @@ export default function DistrictExplorer({ id }: { id: string }) {
         }
       >
         <div className="flex flex-wrap gap-2">
+          <MapModeSwitch mode={mapMode} onChange={setMapMode} />
           <Button tone={tour ? "success" : "white"} onClick={() => { setTour(!tour); if (!tour && !selected) select(districts[0].id); }}>
             <GraduationCap className="size-5" /> {tour ? "Tour on" : "Guided tour"}
           </Button>
@@ -83,7 +84,9 @@ export default function DistrictExplorer({ id }: { id: string }) {
 
       <div className="grid gap-5 lg:grid-cols-[1fr_360px]">
         <div className="space-y-3">
-          {error ? (
+          {mapMode === "google" ? (
+            <GoogleMapFrame query={d ? `${d.name} district, ${s.name}, India` : `${s.name}, India`} zoom={d ? 9 : s.districtCount <= 3 ? 9 : 6} title="Google Map" />
+          ) : error ? (
             <Card>Couldn&apos;t load this map.</Card>
           ) : !features ? (
             <Loading />
@@ -127,7 +130,8 @@ export default function DistrictExplorer({ id }: { id: string }) {
                     {d.ta && <p lang="ta" className="font-display text-xl font-bold text-primary">{d.ta.name}</p>}
                     {d.name !== d.lgdName && <p className="text-sm text-ink-soft">Also written: {d.lgdName}</p>}
                   </div>
-                  <button type="button" aria-label="Listen again" title="Listen again" onClick={() => tell(d.id, true)} className="ml-auto grid size-11 shrink-0 place-items-center rounded-full bg-primary text-white shadow-[0_3px_0_#2450bd]">
+                  <button type="button" aria-label="Listen again"
+                  data-no-announce title="Listen again" onClick={() => tell(d.id, true)} className="ml-auto grid size-11 shrink-0 place-items-center rounded-full bg-primary text-white shadow-[0_3px_0_#2450bd]">
                     <Volume2 className="size-5" />
                   </button>
                   <button type="button" aria-label="Close" onClick={() => setSelected(null)} className="grid size-9 shrink-0 place-items-center rounded-full bg-bg">
@@ -195,6 +199,7 @@ export default function DistrictExplorer({ id }: { id: string }) {
                   <button
                     type="button"
                     aria-label={`Say ${x.name}`}
+                    data-no-announce
                     title={`Say ${x.name}`}
                     onClick={() => speakLocal(x.name, x.ta?.name, { force: true })}
                     className="grid size-9 shrink-0 place-items-center rounded-full text-primary hover:bg-primary-soft"

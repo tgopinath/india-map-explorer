@@ -17,7 +17,7 @@ export default function ProgressPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader title="My Progress" subtitle="Every map you explore helps you grow!" />
+      <PageHeader back="/"  title="My Progress" subtitle="Every map you explore helps you grow!" />
 
       <Card className="flex flex-col gap-5 bg-primary text-white sm:flex-row sm:items-center">
         <Mascot mood="cheer" size={110} />
