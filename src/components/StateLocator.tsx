@@ -2,7 +2,7 @@
 
 import { useMemo } from "react";
 import { geoMercator, geoNaturalEarth1, geoPath } from "d3-geo";
-import type { RegionFeature } from "@/lib/geo";
+import { useDistrictMap, type RegionFeature } from "@/lib/geo";
 
 const W = 100;
 const H = 112;
@@ -112,6 +112,22 @@ export function IndiaColoured({ features, fills, size = 96, blank = [] }: { feat
       {features.map((f) => (
         <path key={f.properties.id} d={byId.get(f.properties.id)?.d} fill={blank.includes(f.properties.id) ? "#ffffff" : fills[f.properties.c]} stroke={blank.includes(f.properties.id) ? "#aab6cf" : "#ffffff"} strokeWidth={0.4} strokeDasharray={blank.includes(f.properties.id) ? "1.2 0.8" : undefined} />
       ))}
+    </svg>
+  );
+}
+
+/** The state's own district map in soft colours — a picture of "what districts look like". */
+export function DistrictPreview({ stateId, fills, size = 96 }: { stateId: string; fills: string[]; size?: number }) {
+  const { features } = useDistrictMap(stateId);
+  const shapes = useMemo(() => {
+    if (!features) return null;
+    const fc = { type: "FeatureCollection" as const, features };
+    const path = geoPath(geoMercator().fitExtent([[3, 3], [W - 3, H - 3]], fc));
+    return features.map((f) => ({ id: f.properties.id, d: path(f) ?? "", c: f.properties.c }));
+  }, [features]);
+  return (
+    <svg viewBox={`0 0 ${W} ${H}`} width={size} height={(size * H) / W} aria-hidden className="shrink-0">
+      {shapes?.map((s) => <path key={s.id} d={s.d} fill={fills[s.c]} stroke="#ffffff" strokeWidth={0.5} strokeLinejoin="round" />)}
     </svg>
   );
 }

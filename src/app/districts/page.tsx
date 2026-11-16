@@ -2,11 +2,11 @@
 
 import Link from "next/link";
 import { ArrowRight, Star, Volume2 } from "lucide-react";
-import { IndiaOutlineDefs, StateLocator } from "@/components/StateLocator";
+import { DistrictPreview, IndiaOutlineDefs, StateLocator } from "@/components/StateLocator";
 import { Mascot } from "@/components/Mascot";
 import { DataStatusBadge, PageHeader, ProgressBar, ShowMore } from "@/components/ui";
 import { getState, PILOT_STATE, REGION_COLOURS, STATES, districtsLabel, type StateInfo } from "@/lib/content";
-import { useIndiaMap } from "@/lib/geo";
+import { DISTRICT_FILLS, useIndiaMap } from "@/lib/geo";
 import { speakLocal } from "@/lib/speech";
 import { useProgress } from "@/lib/progress";
 
@@ -51,7 +51,7 @@ export default function DistrictsHome() {
         <div className="flex items-center gap-2">
           <Mascot mood="cheer" size={96} />
           <div className="rounded-3xl bg-white/70 p-2">
-            {features ? <StateLocator id={pilot.id} features={features} colour="#356ae6" size={84} /> : <div className="h-[94px] w-[84px]" />}
+            <DistrictPreview stateId={pilot.id} fills={DISTRICT_FILLS} size={96} />
           </div>
         </div>
         <div className="flex-1">
@@ -81,10 +81,15 @@ export default function DistrictsHome() {
             <Link
               href={`/districts/${s.id}`}
               aria-label={`${s.name}, ${districtsLabel(s.districtCount)}`}
-              className="flex h-full items-center gap-3 rounded-3xl bg-white p-3 pr-16 shadow-[var(--shadow-card)] transition hover:-translate-y-0.5"
+              className="flex h-full items-center gap-4 rounded-3xl bg-white p-3 pr-16 shadow-[var(--shadow-card)] transition hover:-translate-y-0.5"
             >
-              <div className="grid shrink-0 place-items-center rounded-2xl p-1" style={{ background: `${REGION_COLOURS[s.region]}55` }}>
-                {features ? <StateLocator id={s.id} features={features} colour={s.type === "ut" ? "#ff6a33" : "#356ae6"} size={64} /> : <div className="h-[72px] w-16" />}
+              <div className="relative grid shrink-0 place-items-center rounded-2xl p-1.5" style={{ background: `${REGION_COLOURS[s.region]}55` }}>
+                <DistrictPreview stateId={s.id} fills={DISTRICT_FILLS} size={84} />
+                {features && (
+                  <span className="absolute -bottom-1 -right-1 rounded-lg bg-white p-0.5 shadow">
+                    <StateLocator id={s.id} features={features} colour={s.type === "ut" ? "#ff6a33" : "#356ae6"} size={26} />
+                  </span>
+                )}
               </div>
               <div className="min-w-0 flex-1">
                 <h3 className="text-lg font-bold leading-tight">{s.name}</h3>
