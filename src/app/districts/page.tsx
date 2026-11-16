@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { ArrowRight, Star, Volume2 } from "lucide-react";
 import { DistrictPreview, IndiaOutlineDefs, StateLocator } from "@/components/StateLocator";
-import { DataStatusBadge, PageHeader, ProgressBar, ShowMore } from "@/components/ui";
+import { DataStatusBadge, PageHeader, ProgressBar, ShowMore, TamilName } from "@/components/ui";
 import { getState, PILOT_STATE, REGION_COLOURS, STATES, districtsLabel, type StateInfo } from "@/lib/content";
 import { DISTRICT_FILLS, useIndiaMap } from "@/lib/geo";
 import { speakLocal } from "@/lib/speech";
@@ -91,7 +91,7 @@ export default function DistrictsHome() {
               </div>
               <div className="min-w-0 flex-1">
                 <h3 className="text-lg font-bold leading-tight">{s.name}</h3>
-                {s.ta && <p lang="ta" className="text-sm font-semibold text-primary">{s.ta.name}</p>}
+                <TamilName text={s.ta?.name} className="text-sm font-semibold text-primary" />
                 <p className="text-sm font-bold text-ink-soft">{districtsLabel(s.districtCount)}</p>
                 <div className="mt-1.5 flex flex-wrap items-center gap-2">
                   <DataStatusBadge status={s.dataStatus} issues={s.issues} />

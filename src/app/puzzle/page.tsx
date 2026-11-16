@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { Globe2 } from "lucide-react";
 import { ContinentLocator, DistrictPreview, IndiaColoured, IndiaOutlineDefs, StateLocator, WorldOutlineDefs } from "@/components/StateLocator";
-import { DataStatusBadge, PageHeader, ShowMore, SpeakButton, Stars } from "@/components/ui";
+import { DataStatusBadge, PageHeader, ShowMore, SpeakButton, Stars, TamilName } from "@/components/ui";
 import { PILOT_STATE, REGION_COLOURS, STATES, districtsLabel, getState } from "@/lib/content";
 import { DISTRICT_FILLS, STATE_FILLS, useIndiaMap, useWorldMap } from "@/lib/geo";
 import { useProgress, type Progress } from "@/lib/progress";
@@ -111,7 +111,7 @@ export default function PuzzleHub() {
               </div>
               <div className="min-w-0 flex-1">
                 <h3 className="text-lg font-bold leading-tight">{s.name}</h3>
-                {s.ta && <p lang="ta" className="text-sm font-semibold text-primary">{s.ta.name}</p>}
+                <TamilName text={s.ta?.name} className="text-sm font-semibold text-primary" />
                 <div className="flex items-center gap-2">
                   <span className="text-sm text-ink-soft">{districtsLabel(s.districtCount)}</span>
                   <Stars count={best(p, s.id)} size="size-4" />

@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 import { Check, Search, Volume2 } from "lucide-react";
 import { IndiaOutlineDefs, StateLocator } from "@/components/StateLocator";
-import { Chip, PageHeader, ShowMore } from "@/components/ui";
+import { Chip, PageHeader, ShowMore, TamilName } from "@/components/ui";
 import { REGION_COLOURS, STATES, type Region, type StateInfo, districtsLabel } from "@/lib/content";
 import { useIndiaMap } from "@/lib/geo";
 import { speakLocal } from "@/lib/speech";
@@ -99,7 +99,7 @@ export default function StatesPage() {
                 </div>
                 <div className="flex flex-1 flex-col p-4">
                   <h2 className="text-xl font-bold leading-tight">{s.name}</h2>
-                  {s.ta && <p lang="ta" className="font-display text-base font-semibold text-primary">{s.ta.name}</p>}
+                  <TamilName text={s.ta?.name} className="font-display text-base font-semibold text-primary" />
                   <p className="mt-1 text-ink-soft">Capital: <b className="text-ink">{s.capital}</b></p>
                   <div className="mt-auto flex flex-wrap gap-1.5 pt-3">
                     <Chip className={s.type === "ut" ? "bg-accent-soft text-[#b4471c]" : "bg-primary-soft text-primary"}>{s.type === "ut" ? "UT" : "State"}</Chip>

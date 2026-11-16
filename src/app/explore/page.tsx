@@ -6,7 +6,7 @@ import { ArrowRight, Landmark, Map as MapIcon, Search, Users } from "lucide-reac
 import MapView from "@/components/MapView";
 import { GoogleMapFrame, MapModeSwitch, type MapMode } from "@/components/RealMap";
 import { MascotSays } from "@/components/Mascot";
-import { Card, Chip, LinkButton, Loading, PageHeader } from "@/components/ui";
+import { Card, Chip, LinkButton, Loading, PageHeader, TamilName } from "@/components/ui";
 import { districtsLabel, getState, REGION_COLOURS, STATES, stateName } from "@/lib/content";
 import { STATE_FILLS, useIndiaMap, type RegionFeature } from "@/lib/geo";
 import { actions } from "@/lib/progress";
@@ -141,7 +141,7 @@ export default function ExplorePage() {
                   {s.type === "ut" ? "Union Territory" : "State"} · {s.region}
                 </Chip>
                 <h2 className="mt-2 text-3xl font-extrabold">{s.name}</h2>
-                {s.ta && <p lang="ta" className="font-display text-lg font-bold text-primary">{s.ta.name}</p>}
+                <TamilName text={s.ta?.name} className="font-display text-lg font-bold text-primary" />
               </div>
               <dl className="space-y-3 text-lg">
                 <div className="flex gap-3">

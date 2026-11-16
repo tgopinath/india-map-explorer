@@ -5,7 +5,7 @@ import { Check, Volume2, ChevronLeft, ChevronRight, Building2, GraduationCap, Pu
 import MapView from "@/components/MapView";
 import { GoogleMapFrame, MapModeSwitch, type MapMode } from "@/components/RealMap";
 import { Mascot, MascotSays } from "@/components/Mascot";
-import { Button, Card, DataStatusBadge, LinkButton, Loading, PageHeader, ProgressBar, ShowMore } from "@/components/ui";
+import { Button, Card, DataStatusBadge, LinkButton, Loading, PageHeader, ProgressBar, ShowMore, TamilName } from "@/components/ui";
 import { getDistricts, getState, districtsLabel } from "@/lib/content";
 import { DISTRICT_FILLS, useDistrictMap } from "@/lib/geo";
 import { actions, useProgress } from "@/lib/progress";
@@ -127,7 +127,7 @@ export default function DistrictExplorer({ id }: { id: string }) {
                   <div>
                     <p className="text-sm font-bold uppercase tracking-wide text-primary">District</p>
                     <h2 className="text-3xl font-extrabold leading-tight">{d.name}</h2>
-                    {d.ta && <p lang="ta" className="font-display text-xl font-bold text-primary">{d.ta.name}</p>}
+                    <TamilName text={d.ta?.name} className="font-display text-xl font-bold text-primary" />
                     {d.name !== d.lgdName && <p className="text-sm text-ink-soft">Also written: {d.lgdName}</p>}
                   </div>
                   <button type="button" aria-label="Listen again"

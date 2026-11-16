@@ -5,6 +5,7 @@ import { useState, type ComponentProps, type ReactNode } from "react";
 import { AlertTriangle, ArrowLeft, BadgeCheck, ChevronDown, ChevronUp, Info, Star, Volume2 } from "lucide-react";
 import type { DataStatus } from "@/lib/content";
 import { speakLines } from "@/lib/speech";
+import { useProgress } from "@/lib/progress";
 
 type Tone = "primary" | "secondary" | "success" | "accent" | "ghost" | "white";
 
@@ -239,5 +240,16 @@ export function SpeakButton({ label, onSpeak, className = "", tone = "primary" }
     >
       <Volume2 className="size-6" />
     </button>
+  );
+}
+
+/** Tamil name under an English one — only shown when the child has chosen Tamil. */
+export function TamilName({ text, className = "" }: { text?: string | null; className?: string }) {
+  const lang = useProgress().voiceLang;
+  if (!text || lang !== "ta") return null;
+  return (
+    <p lang="ta" className={className}>
+      {text}
+    </p>
   );
 }
