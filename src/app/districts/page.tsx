@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { ArrowRight, Star, Volume2 } from "lucide-react";
 import { DistrictPreview, IndiaOutlineDefs, StateLocator } from "@/components/StateLocator";
-import { Mascot } from "@/components/Mascot";
 import { DataStatusBadge, PageHeader, ProgressBar, ShowMore } from "@/components/ui";
 import { getState, PILOT_STATE, REGION_COLOURS, STATES, districtsLabel, type StateInfo } from "@/lib/content";
 import { DISTRICT_FILLS, useIndiaMap } from "@/lib/geo";
@@ -49,7 +48,6 @@ export default function DistrictsHome() {
         className="flex flex-col gap-4 overflow-hidden rounded-[2rem] bg-secondary p-6 pr-20 shadow-[var(--shadow-card)] transition hover:-translate-y-1 sm:flex-row sm:items-center"
       >
         <div className="flex items-center gap-2">
-          <Mascot mood="cheer" size={96} />
           <div className="rounded-3xl bg-white/70 p-2">
             <DistrictPreview stateId={pilot.id} fills={DISTRICT_FILLS} size={96} />
           </div>
