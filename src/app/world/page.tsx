@@ -133,7 +133,7 @@ export default function WorldPage() {
         ))}
       </div>
 
-      <div className="grid gap-5 lg:grid-cols-[1fr_340px]">
+      <div className={`grid gap-5 ${c ? "lg:grid-cols-[1fr_340px]" : ""}`}>
         <div>
           {mapMode === "google" ? (
             <GoogleMapFrame query={c ? c.name : "World"} zoom={c ? (c.pop > 1e8 ? 3 : 5) : 2} title="Google Map of the world" />
@@ -166,9 +166,28 @@ export default function WorldPage() {
             />
           )}
           <p className="mt-2 text-sm text-ink-soft">Tiny island countries have a dot. Pinch or use + to zoom in.</p>
+          <div className="mt-4 grid gap-4 md:grid-cols-2">
+            {!c && (
+              <Card className="space-y-3">
+                <MascotSays say>Let&apos;s travel the world! Tap any country, or pick a continent.</MascotSays>
+                <p className="text-ink-soft">
+                  There are <b>7 continents</b>. India is in <b>Asia</b>, the biggest one.
+                </p>
+              </Card>
+            )}
+            <Card className="space-y-2">
+              <p className="font-display text-lg font-bold">Play with the world</p>
+              <Link href="/games/identify-country" className="flex items-center gap-2 rounded-2xl bg-bg px-4 py-3 font-semibold hover:bg-primary-soft">
+                <Globe2 className="size-5 text-primary" /> Identify the Country
+              </Link>
+              <Link href="/puzzle#world" className="flex items-center gap-2 rounded-2xl bg-bg px-4 py-3 font-semibold hover:bg-primary-soft">
+                <Puzzle className="size-5 text-accent" /> Continent puzzles
+              </Link>
+            </Card>
+          </div>
         </div>
 
-        <div ref={panelRef} className="scroll-mt-20 space-y-4">
+        <div ref={panelRef} className={`scroll-mt-20 space-y-4 ${c ? "" : "hidden"}`}>
           {c ? (
             <Card className="animate-pop space-y-4" key={c.id}>
               <div className="flex items-start gap-3">
@@ -243,23 +262,7 @@ export default function WorldPage() {
                 </LinkButton>
               )}
             </Card>
-          ) : (
-            <Card className="space-y-3">
-              <MascotSays say>Let&apos;s travel the world! Tap any country, or pick a continent.</MascotSays>
-              <p className="text-ink-soft">
-                There are <b>7 continents</b>. India is in <b>Asia</b>, the biggest one.
-              </p>
-            </Card>
-          )}
-          <Card className="space-y-2">
-            <p className="font-display text-lg font-bold">Play with the world</p>
-            <Link href="/games/identify-country" className="flex items-center gap-2 rounded-2xl bg-bg px-4 py-3 font-semibold hover:bg-primary-soft">
-              <Globe2 className="size-5 text-primary" /> Identify the Country
-            </Link>
-            <Link href="/puzzle#world" className="flex items-center gap-2 rounded-2xl bg-bg px-4 py-3 font-semibold hover:bg-primary-soft">
-              <Puzzle className="size-5 text-accent" /> Continent puzzles
-            </Link>
-          </Card>
+          ) : null}
         </div>
       </div>
     </div>

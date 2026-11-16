@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState, type PointerEvent as RPointerEvent } from "react";
-import { Clock, Lightbulb, Lock, RotateCcw, Shuffle, Star, Timer, Trophy } from "lucide-react";
+import { Clock, Lightbulb, Lock, RotateCcw, Shuffle, Star, Timer, Trophy, Volume2 } from "lucide-react";
 import MapView, { type RegionMark } from "./MapView";
 import { Mascot, MascotSays, type Mood } from "./Mascot";
 import { Button, Card, DataStatusBadge, LinkButton, Loading, Stars } from "./ui";
@@ -367,21 +367,35 @@ export default function PuzzleGame({ mapKey }: { mapKey: string }) {
                 </div>
                 <div className="grid grid-cols-3 gap-1.5 lg:grid-cols-2 lg:gap-2">
                   {hand.map((id) => (
+                    <div key={id} className="relative">
                     <button
-                      key={id}
                       type="button"
                       onPointerDown={(e) => onCardDown(e, id)}
                       onPointerMove={onCardMove}
                       onPointerUp={onCardUp}
                       onPointerCancel={() => { dragStart.current = null; setDrag(null); }}
                       style={{ touchAction: "none" }}
-                      className={`min-h-12 cursor-grab select-none rounded-2xl border-2 px-2 py-1.5 font-display text-[15px] font-bold leading-tight lg:min-h-14 lg:px-3 lg:py-2 lg:text-[17px] transition active:cursor-grabbing ${
+                      className={`min-h-12 w-full cursor-grab select-none rounded-2xl border-2 py-1.5 pl-2 pr-8 font-display text-[15px] font-bold leading-tight lg:min-h-14 lg:pl-3 lg:pr-9 lg:py-2 lg:text-[17px] transition active:cursor-grabbing ${
                         active === id ? "border-primary bg-primary text-white shadow-[0_4px_0_#2450bd]" : "border-line bg-white shadow-[0_3px_0_#d5dcea] hover:border-primary/50"
                       } ${shakeId === id ? "animate-shake border-danger" : ""} ${drag?.id === id ? "opacity-30" : ""}`}
                       aria-pressed={active === id}
                     >
                       {names.get(id)}
                     </button>
+                    <button
+                      type="button"
+                      aria-label={`Hear ${names.get(id)}`}
+                      title={`Hear ${names.get(id)}`}
+                      data-no-announce
+                      onPointerDown={(e) => e.stopPropagation()}
+                      onClick={() => speakLocal(names.get(id) ?? "", taNames.get(id), { force: true })}
+                      className={`absolute right-1.5 top-1.5 grid size-7 place-items-center rounded-full transition ${
+                        active === id ? "bg-white/25 text-white" : "bg-primary-soft text-primary hover:bg-primary hover:text-white"
+                      }`}
+                    >
+                      <Volume2 className="size-4" />
+                    </button>
+                    </div>
                   ))}
                 </div>
                 {active && <p className="mt-2 px-1 text-sm font-semibold text-primary">Now tap where {names.get(active)} goes on the map.</p>}
