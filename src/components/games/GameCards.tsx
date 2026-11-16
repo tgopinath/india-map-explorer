@@ -78,7 +78,7 @@ export function GameCards({ ids, className = "grid gap-4 sm:grid-cols-2 lg:grid-
               >
                 <div
                   className="relative grid h-40 place-items-center overflow-hidden"
-                  style={{ background: `radial-gradient(circle at 30% 20%, #ffffff99 0 18%, transparent 19%), radial-gradient(circle at 85% 80%, #ffffff66 0 14%, transparent 15%), linear-gradient(135deg, ${g.bg}, ${g.fg}55)` }}
+                  style={{ background: `linear-gradient(135deg, ${g.bg}, ${g.fg}40)` }}
                 >
                   <div className="transition group-hover:scale-105">
                     <Picture g={g} india={india} world={world} />
