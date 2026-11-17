@@ -91,3 +91,26 @@ h1, h2, h3, .font-display {
     transition-duration: 0.01ms !important;
   }
 }
+
+/* ---------- Android app mode (Material Design 3) ----------
+   public/m3/kolam-m3.js adds html.k-android inside the Android app and builds the M3 top app bar and
+   navigation bar; the web header, sidebar and bottom bar are hidden here (CSS, because Next renders after
+   the kit starts). The app's own colours point at the generated M3 roles; its kid-friendly fonts stay. */
+html.k-android .m3-web { display: none !important; }
+html.k-android.k-app {
+  --md-ref-typeface-brand: var(--font-baloo), "Baloo 2", system-ui, sans-serif;
+  --md-ref-typeface-plain: var(--font-nunito), "Nunito", system-ui, sans-serif;
+  --color-primary: var(--md-sys-color-primary);
+  --color-primary-dark: var(--md-sys-color-on-primary-container);
+  --color-primary-soft: var(--md-sys-color-primary-container);
+  --color-bg: var(--md-sys-color-surface);
+  --color-ink: var(--md-sys-color-on-surface);
+  --color-ink-soft: var(--md-sys-color-on-surface-variant);
+  --color-line: var(--md-sys-color-outline-variant);
+}
+html.k-android body { background: var(--md-sys-color-surface); font-family: var(--font-sans); }
+html.k-android main { padding-top: 12px !important; padding-bottom: 24px !important; }
+/* More: an M3 bottom sheet above the navigation bar */
+html.k-android .m3-sheet { background: color-mix(in srgb, var(--md-sys-color-scrim) 32%, transparent); }
+html.k-android .m3-sheet > div { background: var(--md-sys-color-surface-container-low); border-radius: var(--md-sys-shape-corner-extra-large) var(--md-sys-shape-corner-extra-large) 0 0; padding-bottom: calc(24px + var(--md-inset-bottom)); }
+html.k-android .m3-sheet > div a { background: var(--md-sys-color-surface-container-high); border-radius: var(--md-sys-shape-corner-large); }

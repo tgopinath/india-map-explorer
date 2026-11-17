@@ -59,7 +59,7 @@ export function PageHeader({
       <div className="relative flex min-w-0 items-start gap-3 xl:gap-0">
         {back &&
           (typeof back === "string" ? (
-            <Link href={back} aria-label={backLabel} title={backLabel} className={cls}>
+            <Link href={back} aria-label={backLabel} title={backLabel} className={`m3-web ${cls}`}>
               <ArrowLeft className="size-6" />
             </Link>
           ) : (

@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { useEffect, useState, type ReactNode } from "react";
+import { usePathname, useRouter } from "next/navigation";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Award, BookOpen, Compass, Globe2, Flame, Home, LayoutGrid, Map as MapIcon, MoreHorizontal, Puzzle, Trophy, Users, Volume2, VolumeX, X } from "lucide-react";
 import { actions, BADGES, onBadgeEarned, useProgress } from "@/lib/progress";
 import { startSync } from "@/lib/sync";
@@ -25,6 +25,28 @@ const EXTRA = [
   { href: "/parent", label: "Parent Corner", icon: Users },
 ];
 const MOBILE_MAIN = ["/", "/explore", "/districts", "/puzzle", "/quiz"];
+
+// ---------- Android app mode (Material Design 3, from the shared Kolam M3 kit in public/m3) ----------
+// Only inside the Android app (or ?app=android): an M3 top app bar and navigation bar replace the web header,
+// sidebar and bottom bar (hidden with CSS, see globals.css). In a browser nothing changes.
+type M3 = {
+  enabled: boolean;
+  setTitle(t: string): void;
+  setBack(v: boolean | string | null): void;
+  setActive(id: string | null): void;
+  setActions(a: { id?: string; icon?: string; text?: string; lang?: string; label: string; onClick: () => void }[]): void;
+};
+type KolamM3Api = { isAndroid: boolean; init(o: Record<string, unknown>): M3 };
+const M3_DESTS = [
+  { id: "home", label: "Home", icon: "home", href: "/" },
+  { id: "explore", label: "Explore", icon: "explore", href: "/explore" },
+  { id: "districts", label: "Districts", icon: "map", href: "/districts" },
+  { id: "puzzle", label: "Puzzle", icon: "extension", href: "/puzzle" },
+  { id: "quiz", label: "Quiz", icon: "emoji_events", href: "/quiz" },
+];
+const m3Title = (path: string) =>
+  path === "/" ? "Map Explorer" : [...NAV, ...EXTRA].find((n) => n.href === path)?.label ?? null;
+const m3Parent = (path: string) => "/" + (path.split("/")[1] ?? "");
 
 const isActive = (path: string, href: string) => (href === "/" ? path === "/" : path === href || path.startsWith(href + "/"));
 
@@ -61,6 +83,68 @@ export default function AppShell({ children }: { children: ReactNode }) {
     [],
   );
 
+  // Android app: M3 bars from the kit. Back closes the More sheet, then goes back a screen, then home, then leaves.
+  const router = useRouter();
+  const m3 = useRef<M3 | null>(null);
+  const stack = useRef<string[]>([]);
+  const nav = useRef({ path, more, router });
+  useEffect(() => {
+    nav.current = { path, more, router };
+  });
+  useEffect(() => {
+    const K = (window as unknown as { KolamM3?: KolamM3Api }).KolamM3;
+    if (!K?.isAndroid) return;
+    m3.current = K.init({
+      primary: "#356ae6",
+      title: "Map Explorer",
+      destinations: M3_DESTS,
+      icons: ["volume_up", "volume_off", "apps", "arrow_back"],
+      isRoot: () => M3_DESTS.some((d) => d.href === nav.current.path),
+      onBack: () => {
+        const { path: here, more: open, router: r } = nav.current;
+        if (open) { setMore(false); return true; }
+        const root = M3_DESTS.some((d) => d.href === here);
+        if (!root) {
+          if (stack.current.length > 1) window.history.back();
+          else r.push(m3Parent(here) === here ? "/" : m3Parent(here));
+          return true;
+        }
+        if (here !== "/") { r.push("/"); return true; }
+        return false; // on Home: the kit leaves the app
+      },
+    });
+  }, []);
+  // Per screen: title, active destination and the back arrow (after the kit's own route handling).
+  useEffect(() => {
+    const st = stack.current;
+    if (st[st.length - 2] === path) st.pop(); else if (st[st.length - 1] !== path) st.push(path);
+    const c = m3.current;
+    if (!c?.enabled) return;
+    const dest = M3_DESTS.find((d) => isActive(path, d.href) && (d.href !== "/" || path === "/"));
+    const root = M3_DESTS.some((d) => d.href === path);
+    const t = window.setTimeout(() => {
+      c.setActive(dest?.id ?? null);
+      c.setBack(!root);
+      c.setTitle(m3Title(path) ?? document.querySelector("main h1")?.textContent?.trim() ?? "Map Explorer");
+    }, 250);
+    return () => window.clearTimeout(t);
+  }, [path]);
+  useEffect(() => {
+    m3.current?.setActions([
+      { id: "m3Read", icon: p.readAloud ? "volume_up" : "volume_off", label: p.readAloud ? "Read aloud is on" : "Read aloud is off",
+        onClick: () => { if (p.readAloud) stopSpeaking(); else speak("Okay! I will read things out loud for you.", { force: true }); actions.toggleReadAloud(); } },
+      { id: "m3Lang", text: p.voiceLang === "ta" ? "த" : "EN", lang: p.voiceLang, label: p.voiceLang === "ta" ? "Voice: Tamil. Switch to English" : "Voice: English. Switch to Tamil",
+        onClick: () => {
+          const next = p.voiceLang === "ta" ? "en" : "ta";
+          actions.setVoiceLang(next);
+          if (next === "en") speak("Okay! I will speak in English.", { force: true });
+          else if (hasTamilVoice()) speak("வணக்கம்! இனி பெயர்களைத் தமிழில் சொல்கிறேன்.", { force: true, lang: "ta" });
+          else speak("This device has no Tamil voice, so I will keep speaking English.", { force: true });
+        } },
+      { id: "m3More", icon: "apps", label: "More", onClick: () => setMore(true) },
+    ]);
+  }, [p.readAloud, p.voiceLang]);
+
   // Close the mobile sheet on navigation.
   const [lastPath, setLastPath] = useState(path);
   if (path !== lastPath) {
@@ -71,7 +155,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
   return (
     <div className="flex min-h-dvh">
       {/* Desktop sidebar */}
-      <aside className="sticky top-0 hidden h-dvh w-64 shrink-0 flex-col gap-1 border-r border-line bg-white px-4 py-5 lg:flex">
+      <aside className="m3-web sticky top-0 hidden h-dvh w-64 shrink-0 flex-col gap-1 border-r border-line bg-white px-4 py-5 lg:flex">
         <Link href="/" className="mb-4 flex items-center gap-2 px-2">
           <Mascot size={48} />
           <span className="font-display text-xl font-extrabold leading-tight text-primary">
@@ -109,7 +193,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
 
       <div className="flex min-w-0 flex-1 flex-col">
         {/* Mobile top bar */}
-        <header className="sticky top-0 z-30 flex items-center justify-between border-b border-line bg-white/90 px-4 py-2 backdrop-blur lg:hidden">
+        <header className="m3-web sticky top-0 z-30 flex items-center justify-between border-b border-line bg-white/90 px-4 py-2 backdrop-blur lg:hidden">
           <Link href="/" className="flex items-center gap-2">
             <Mascot size={36} />
             <span className="font-display text-lg font-extrabold text-primary">India Map Explorer</span>
@@ -127,7 +211,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
       </div>
 
       {/* Mobile bottom navigation */}
-      <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-line bg-white pb-[env(safe-area-inset-bottom)] lg:hidden" aria-label="Main">
+      <nav className="m3-web fixed inset-x-0 bottom-0 z-40 border-t border-line bg-white pb-[env(safe-area-inset-bottom)] lg:hidden" aria-label="Main">
         <div className="grid grid-cols-6">
           {NAV.filter((n) => MOBILE_MAIN.includes(n.href)).map(({ href, label, short, icon: Icon }) => {
             const on = isActive(path, href);
@@ -150,7 +234,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
       </nav>
 
       {more && (
-        <div className="fixed inset-0 z-50 bg-ink/30 lg:hidden" onClick={() => setMore(false)}>
+        <div className="m3-sheet fixed inset-0 z-50 bg-ink/30 lg:hidden" onClick={() => setMore(false)}>
           <div className="absolute inset-x-0 bottom-0 animate-pop rounded-t-3xl bg-white p-5 pb-8" onClick={(e) => e.stopPropagation()}>
             <div className="mb-3 flex items-center justify-between">
               <h2 className="text-xl font-bold">More</h2>
