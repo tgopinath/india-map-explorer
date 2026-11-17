@@ -6,8 +6,9 @@ import path from "node:path";
 import { feature } from "topojson-client";
 import { getDistricts, getState, PILOT_STATE, STATES } from "../src/lib/content";
 import { CONTINENT_BOX, CONTINENTS, COUNTRIES, getCountry } from "../src/lib/world";
+import { CLOTHING, FEATURED, FESTIVALS, FOODS, GREETINGS, LANDMARKS, mediaFor } from "../src/lib/explorer";
 import {
-  continentQs, identifyCountryQs,
+  continentQs, identifyCountryQs, dailyQs, findCountryQs, flagQuizQs, foodExplorerQs, landmarkDetectiveQs, worldCapitalQs,
   capitalMcqQs, districtMcqQs, districtTapQs, findCapitalQs, identifyStateQs, neighbourMcqQs, type Question,
 } from "../src/lib/questions";
 
@@ -72,7 +73,7 @@ check(tn.every((d) => d.curated && d.headquarters && d.fact), "every Tamil Nadu 
 // 5. Game logic: many random rounds, every question must be well-formed.
 const validate = (q: Question, label: string) => {
   if (q.kind === "mcq") {
-    check(q.options.length === 4, `${label} ${q.id}: ${q.options.length} options`);
+    check(q.options.length >= 3 && q.options.length <= 4, `${label} ${q.id}: ${q.options.length} options`);
     check(new Set(q.options).size === q.options.length, `${label} ${q.id}: duplicate options ${q.options}`);
     check(q.options.filter((o) => o === q.answer).length === 1, `${label} ${q.id}: answer not exactly once`);
   } else {
@@ -107,6 +108,30 @@ for (let i = 0; i < 200; i++) {
   continentQs().forEach((q) => validate(q, "continent"));
 }
 
+// 7. World Explorer content: every item points at a real country, landmarks have a photo,
+// a credit and coordinates; games produce valid questions at every level.
+for (const l of LANDMARKS) {
+  check(getCountry(l.country), `landmark ${l.id}: unknown country ${l.country}`);
+  const m = mediaFor(l.id);
+  check(m?.coords, `landmark ${l.id}: no coordinates`);
+  check(m?.image && m.credit, `landmark ${l.id}: no credited photo`);
+}
+for (const f of [...FOODS, ...CLOTHING]) check(getCountry(f.country), `${f.id}: unknown country ${f.country}`);
+for (const f of FESTIVALS) check(f.country === null || getCountry(f.country), `${f.id}: unknown country`);
+for (const g of GREETINGS) check(getCountry(g.country) && /^[a-z]{2}-[A-Z]{2}$/.test(g.voice), `greeting ${g.id}`);
+for (const id of FEATURED) check(getCountry(id), `profile ${id}: unknown country`);
+for (const level of ["beginner", "intermediate", "advanced"] as const) {
+  for (let i = 0; i < 40; i++) {
+    worldCapitalQs(level).forEach((q) => validate(q, `wcap-${level}`));
+    landmarkDetectiveQs(level).forEach((q) => validate(q, `ld-${level}`));
+    foodExplorerQs(level).forEach((q) => validate(q, `fe-${level}`));
+    flagQuizQs(level).forEach((q) => validate(q, `flag-${level}`));
+    findCountryQs(level).forEach((q) => validate(q, `find-${level}`));
+  }
+}
+const d1 = JSON.stringify(dailyQs("2026-11-17"));
+check(d1 === JSON.stringify(dailyQs("2026-11-17")), "daily challenge is not the same for everyone on a day");
+check(d1 !== JSON.stringify(dailyQs("2026-11-18")), "daily challenge does not change between days");
 if (failures) {
   console.error(`\n${failures} check(s) failed`);
   process.exit(1);

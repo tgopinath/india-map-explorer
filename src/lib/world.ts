@@ -72,3 +72,16 @@ export function peopleText(c: Country) {
   if (c.pop > 0 && c.pop < 1000) return `Very few people — about ${c.pop}`;
   return popText(c.pop);
 }
+
+/** Where the globe turns to for each continent (lon, lat) and how far it zooms in. */
+export const CONTINENT_FOCUS: Record<Continent, { coords: [number, number]; zoom: number }> = {
+  Asia: { coords: [90, 30], zoom: 1.4 },
+  Africa: { coords: [20, 3], zoom: 1.5 },
+  Europe: { coords: [15, 52], zoom: 2.2 },
+  "North America": { coords: [-100, 40], zoom: 1.4 },
+  "South America": { coords: [-60, -18], zoom: 1.6 },
+  Oceania: { coords: [145, -25], zoom: 1.6 },
+  Antarctica: { coords: [0, -82], zoom: 1.3 },
+};
+/** Children often learn "Australia" as the continent's name. */
+export const continentLabel = (c: Continent) => (c === "Oceania" ? "Australia & Oceania" : c);

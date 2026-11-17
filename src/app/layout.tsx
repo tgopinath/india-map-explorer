@@ -8,8 +8,8 @@ const baloo = Baloo_2({ variable: "--font-baloo", subsets: ["latin"], weight: ["
 const nunito = Nunito({ variable: "--font-nunito", subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "India Map Explorer",
-  description: "Learn India's states, Union Territories and districts with maps, puzzles and quizzes.",
+  title: "Map Explorer — India & World 360",
+  description: "Explore India's states and districts and the whole world on a 3D globe: landmarks, cultures, food, festivals, games and a travel passport for kids.",
 };
 
 export const viewport: Viewport = {

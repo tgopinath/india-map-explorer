@@ -1,6 +1,6 @@
-# India Map Explorer
+# Map Explorer — India & World 360
 
-An interactive geography game for kids: explore India's 28 states and 8 Union Territories, learn every district, arrange them in drag-and-drop puzzles, play mini games and take quizzes. Tamil Nadu is the pilot state, with all 38 districts checked by hand and given fun facts.
+An interactive geography game for kids. Spin a 3D globe and visit every country, tour famous landmarks in photos and 360° Street View, discover food, clothes, festivals and greetings from around the world — then zoom into India's 28 states, 8 Union Territories and every district. Drag-and-drop puzzles, games, quizzes, missions and a digital passport keep it playful. Tamil Nadu is the pilot state, with all 38 districts checked by hand and given fun facts.
 
 ## Run it
 
@@ -15,16 +15,20 @@ npm run build      # production build
 
 | Section | Route | What it does |
 | --- | --- | --- |
-| Home | `/` | Mascot greeting, level, streak, shortcuts |
-| World Map | `/world` | Every country by continent, with capital, population and neighbours; "Identify the Country" game and continent puzzles (`/puzzle/world-asia` etc.) |
+| Home | `/` | Spinning globe, continue exploring, daily challenge, rank, passport preview, games |
+| Explore World | `/world` | 3D globe (drag to rotate, pinch or ⌘/Ctrl-scroll to zoom, keyboard arrows), flat map or Google satellite; tap a country for its flag, capital, continent, population, languages, currency and facts; landmark markers; continent shortcuts |
+| Country page | `/world/[id]` | Languages, currency, big cities, national animal, landmarks, food, clothing, festivals, greetings, neighbours — every visit adds a passport stamp |
+| Continents | `/world/continent/[slug]` | All seven continents: countries, wildlife, people, landmarks, puzzle |
+| Landmarks 360 | `/landmarks`, `/landmarks/[id]` | 32 landmarks by category (historical, modern, natural, religious, ancient, famous buildings) with photo, location, period, style, facts, globe, satellite view and 360° Street View; three secret destinations unlock with progress |
+| Cultures & Food | `/cultures` | Flip cards for traditional food (ingredients, facts), clothing and festivals; greetings spoken in their own language |
 | Explore India | `/explore` | Zoomable state map, search, capital / neighbours / district count panel, colour by region |
 | Learn States | `/states`, `/states/[id]` | Filterable list; state page with map, capital, languages, districts, places, facts |
 | Learn Districts | `/districts`, `/districts/[id]` | District map, tap to reveal name + fact, search, guided tour, next-door districts |
 | Map Puzzle | `/puzzle`, `/puzzle/[id]` | Drag (or tap) name cards onto the map. Easy / Medium / Hard, hints, timer, score, stars, retry. `india` = arrange the states |
-| Mini games | `/games/*` | Identify the State, Find the Capital, District Explorer, Arrange the States, Neighbour Challenge |
+| Geography Challenges | `/games`, `/games/*` | World: Find the Country (tap it on the globe), Match the Flags (drag), Guess the Capital, Landmark Detective, Food Explorer, Continent Challenge (drag), Identify the Country, World Map Jigsaw. India: Identify the State, Find the Capital, District Explorer, Arrange the States, Neighbour Challenge. Plus a Daily Challenge that is the same for everyone each day. Beginner / Intermediate / Advanced |
 | Quiz Challenge | `/quiz` | Beginner → Intermediate → Advanced (unlock with 2★), full results screen |
-| My Progress | `/progress` | Level, points, streak, badges, puzzle and quiz history |
-| Parent Corner | `/parent` | Behind a grown-up check: completion, districts learned, quiz scores, learning time, topics to practise, data notes, reset |
+| My Achievements | `/progress` | Explorer rank (Junior Explorer → Master Explorer), passport stamps, missions and trophies, country cards, badges, puzzle and quiz history |
+| Parent Corner | `/parent` | Behind a grown-up check: learning level, completion, countries and landmarks explored, quiz scores, learning time, topics to practise, data notes, reset |
 
 Every state and UT has a district map, puzzle and quizzes; adding curated facts is the only per-state work.
 
@@ -43,6 +47,10 @@ Geometry is only simplified, never edited. To refresh, download `LGD_States.geoj
 ### World map
 
 `npm run build:world` builds `public/data/world.topo.json` from [Natural Earth](https://www.naturalearthdata.com/) 1:10m countries, **India point-of-view edition** (public domain), with India drawn from the same official LGD outline as the rest of the app and neighbouring shapes trimmed around it. Capitals come from Natural Earth populated places, with a few documented corrections in `scripts/build-world.mjs` (Astana, Dodoma, Sri Jayawardenepura Kotte, Yamoussoukro). Capitals whose status is disputed internationally are left blank. Raw files go in `data-raw/world/`.
+
+### World Explorer content
+
+Country languages, currencies and centre points come from [mledoze/countries](https://github.com/mledoze/countries) (ODbL); big cities from Natural Earth populated places. Landmarks, foods, clothing, festivals, greetings and country profiles are written by hand in `src/data/explorer.json`. `npm run build:explorer` looks up each item's photo and coordinates on Wikipedia and the photo's author and licence on Wikimedia Commons; the app shows that credit under every photo. `npm run validate` checks every item points at a real country and every landmark has coordinates and a credited photo.
 
 ### Verified vs. snapshot
 

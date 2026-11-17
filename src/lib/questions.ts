@@ -3,10 +3,11 @@
 
 import { getDistricts, getState, sample, shortCapital, shuffle, STATES, type StateInfo } from "./content";
 import { CONTINENTS, COUNTRIES, getCountry, isCountry } from "./world";
+import { FOODS, gamePool, LANDMARKS, mediaFor } from "./explorer";
 
 export type Question =
-  | { kind: "mcq"; id: string; prompt: string; map: "india" | "district" | "world"; highlight: string | null; options: string[]; answer: string; key: string; explain: string }
-  | { kind: "tap"; id: string; prompt: string; map: "india" | "district" | "world"; answer: string; key: string; explain: string };
+  | { kind: "mcq"; id: string; prompt: string; map: "india" | "district" | "world" | "globe" | "none"; highlight: string | null; options: string[]; answer: string; key: string; explain: string; image?: string; optionFlags?: string[] }
+  | { kind: "tap"; id: string; prompt: string; map: "india" | "district" | "world" | "globe"; answer: string; key: string; explain: string };
 
 /** Pick distractors close to the answer first (neighbours, same region) so questions make kids think. */
 function nearFirst<T>(pool: T[], near: T[], n: number) {
@@ -163,4 +164,124 @@ export function continentQs(n = 5): Question[] {
     key: `continent:${c.id}`,
     explain: `${c.name} is in ${c.continent}.`,
   }));
+}
+
+// ---------- World Explorer games ----------
+
+
+export type Level = "beginner" | "intermediate" | "advanced";
+const optionCount = (level: Level) => (level === "beginner" ? 3 : 4);
+
+/** Pick wrong answers that are believable: same continent first. */
+function countryOptions(answerId: string, level: Level, extraPool?: string[]) {
+  const pool = extraPool ?? gamePool(level).map((c) => c.id);
+  const a = getCountry(answerId)!;
+  const near = pool.filter((id) => id !== answerId && getCountry(id)?.continent === a.continent);
+  const others = nearFirst(pool.filter((id) => id !== answerId), near, optionCount(level) - 1);
+  return shuffle([answerId, ...others]);
+}
+
+export function findCountryQs(level: Level, n = 8): Question[] {
+  return sample(gamePool(level), n).map((c) => ({
+    kind: "tap",
+    id: `find-${c.id}`,
+    prompt: `Find ${c.name} on the globe!`,
+    map: "globe",
+    answer: c.id,
+    key: `country:${c.id}`,
+    explain: `${c.name} is in ${c.continent}.`,
+  }));
+}
+
+export function worldCapitalQs(level: Level, n = 10): Question[] {
+  const pool = gamePool(level).filter((c) => c.capitals.length === 1);
+  return sample(pool, n).map((c) => {
+    const others = nearFirst(pool.filter((x) => x.id !== c.id), pool.filter((x) => x.continent === c.continent), optionCount(level) - 1);
+    return {
+      kind: "mcq",
+      id: `wcap-${c.id}`,
+      prompt: `What is the capital of ${c.name}?`,
+      map: "globe",
+      highlight: c.id,
+      options: shuffle([c, ...others]).map((x) => x.capitals[0]),
+      answer: c.capitals[0],
+      key: `wcapital:${c.id}`,
+      explain: `The capital of ${c.name} is ${c.capitals[0]}.`,
+    };
+  });
+}
+
+export function landmarkDetectiveQs(level: Level, n = 8): Question[] {
+  const withPhotos = LANDMARKS.filter((l) => mediaFor(l.id)?.image);
+  const ids = [...new Set([...gamePool(level).map((c) => c.id), ...withPhotos.map((l) => l.country)])];
+  return sample(withPhotos, n).map((l) => {
+    const opts = countryOptions(l.country, level, ids);
+    return {
+      kind: "mcq",
+      id: `ld-${l.id}`,
+      prompt: "Landmark detective: which country is this place in?",
+      map: "none",
+      image: l.id,
+      highlight: null,
+      options: opts.map((id) => getCountry(id)!.name),
+      optionFlags: opts,
+      answer: getCountry(l.country)!.name,
+      key: `landmark:${l.id}`,
+      explain: `That's ${l.name}, in ${l.city}, ${getCountry(l.country)!.name}.`,
+    };
+  });
+}
+
+export function foodExplorerQs(level: Level, n = 8): Question[] {
+  const withPhotos = FOODS.filter((f) => mediaFor(f.id)?.image);
+  const ids = [...new Set([...gamePool(level).map((c) => c.id), ...withPhotos.map((f) => f.country)])];
+  return sample(withPhotos, n).map((f) => {
+    const opts = countryOptions(f.country, level, ids);
+    return {
+      kind: "mcq",
+      id: `fe-${f.id}`,
+      prompt: "Food explorer: which country does this dish come from?",
+      map: "none",
+      image: f.id,
+      highlight: null,
+      options: opts.map((id) => getCountry(id)!.name),
+      optionFlags: opts,
+      answer: getCountry(f.country)!.name,
+      key: `food:${f.id}`,
+      explain: `That's ${f.name}, from ${getCountry(f.country)!.name}.`,
+    };
+  });
+}
+
+export function flagQuizQs(level: Level, n = 8): Question[] {
+  return sample(gamePool(level).filter((c) => c.iso2), n).map((c) => {
+    const opts = countryOptions(c.id, level);
+    return {
+      kind: "mcq",
+      id: `flag-${c.id}`,
+      prompt: "Whose flag is this? The country is glowing on the globe.",
+      map: "globe",
+      highlight: c.id,
+      options: opts.map((id) => getCountry(id)!.name),
+      optionFlags: opts,
+      answer: c.name,
+      key: `flag:${c.id}`,
+      explain: `That is the flag of ${c.name}.`,
+    };
+  });
+}
+
+/** The same five questions for everyone on a given day. */
+export function dailyQs(day: string): Question[] {
+  let seed = [...day].reduce((a, ch) => (a * 31 + ch.charCodeAt(0)) >>> 0, 7);
+  const rand = () => ((seed = (seed * 1664525 + 1013904223) >>> 0) / 2 ** 32);
+  // Run the normal generators with a day-seeded random so the set is reproducible.
+  const real = Math.random;
+  Math.random = rand;
+  try {
+    const qs = [worldCapitalQs("beginner", 1)[0], landmarkDetectiveQs("beginner", 1)[0], identifyStateQs(1)[0], foodExplorerQs("beginner", 1)[0], identifyCountryQs(1)[0]];
+    return qs.map((q, i) => ({ ...q, id: `daily-${day}-${i}` }));
+  } finally {
+    Math.random = real;
+  }
 }

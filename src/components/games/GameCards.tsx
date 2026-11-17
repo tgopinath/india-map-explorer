@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { Crosshair, Gamepad2, Landmark, MapPin, Play, Trophy } from "lucide-react";
+import { CalendarCheck, Crosshair, Gamepad2, Landmark, MapPin, Play, Trophy } from "lucide-react";
+import { Flag, Photo } from "@/components/Media";
 import { ContinentLocator, IndiaColoured, IndiaOutlineDefs, StateLocator, WorldOutlineDefs } from "@/components/StateLocator";
 import { SpeakButton } from "@/components/ui";
 import { getState } from "@/lib/content";
@@ -50,16 +51,55 @@ function Picture({ g, india, world }: { g: Game; india: RegionFeature[] | null; 
       );
     case "neighbours":
       return <StateLocator id="telangana" features={india} colour="#ff8b5c" also={getState("telangana")!.neighbours} size={104} />;
+    case "find-country":
+      return world ? <ContinentLocator continent="Europe" features={world} continentOf={continentOf} colour="#2f5fd0" size={190} /> : <div className="h-[100px]" />;
+    case "world-jigsaw":
+      return world ? <ContinentLocator continent="South America" features={world} continentOf={continentOf} colour="#ff8b5c" size={190} /> : <div className="h-[100px]" />;
+    case "continent-challenge":
+      return world ? <ContinentLocator continent="Oceania" features={world} continentOf={continentOf} colour="#1f8a7a" size={190} /> : <div className="h-[100px]" />;
+    case "match-flags":
+      return (
+        <div className="flex -space-x-3">
+          {["fr", "jp", "br"].map((id, i) => (
+            <span key={id} style={{ transform: `rotate(${(i - 1) * 8}deg)` }}>
+              <Flag id={id} size={72} />
+            </span>
+          ))}
+        </div>
+      );
+    case "guess-capital":
+      return (
+        <div className="relative">
+          <Flag id="jp" size={110} />
+          <span className="absolute -bottom-3 -right-4 rounded-full bg-white px-3 py-1 font-display text-lg font-extrabold text-[#b47c00] shadow-md">Tokyo?</span>
+        </div>
+      );
+    case "landmark-detective":
+      return (
+        <div className="relative w-44">
+          <Photo id="taj-mahal" alt="" credit={false} ratio="aspect-[16/10]" />
+          <span className="absolute -right-3 -top-3 grid size-9 place-items-center rounded-full bg-white font-display text-2xl font-extrabold text-[#7b55e0] shadow-md">?</span>
+        </div>
+      );
+    case "food-explorer":
+      return (
+        <div className="relative w-44">
+          <Photo id="sushi" alt="" credit={false} ratio="aspect-[16/10]" />
+          <span className="absolute -right-3 -top-3 grid size-9 place-items-center rounded-full bg-white font-display text-2xl font-extrabold text-success shadow-md">?</span>
+        </div>
+      );
+    case "daily":
+      return <CalendarCheck className="size-20 text-[#b47c00]" />;
     default:
       return <Gamepad2 className="size-16" />;
   }
 }
 
-export function GameCards({ ids, className = "grid gap-4 sm:grid-cols-2 lg:grid-cols-3" }: { ids?: string[]; className?: string }) {
+export function GameCards({ ids, group, className = "grid gap-4 sm:grid-cols-2 lg:grid-cols-3" }: { ids?: string[]; group?: string; className?: string }) {
   const p = useProgress();
   const india = useIndiaMap().features;
   const world = useWorldMap().features;
-  const list = ids ? GAMES.filter((g) => ids.includes(g.id)) : GAMES;
+  const list = ids ? ids.map((id) => GAMES.find((g) => g.id === id)!).filter(Boolean) : group ? GAMES.filter((g) => g.group === group) : GAMES;
   return (
     <>
       {india && <IndiaOutlineDefs features={india} />}

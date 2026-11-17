@@ -13,10 +13,11 @@
 
 import fs from "node:fs";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 import mapshaper from "mapshaper";
 import * as topojson from "topojson-client";
 
-const ROOT = path.resolve(path.dirname(new URL(import.meta.url).pathname), "..");
+const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const RAW = path.join(ROOT, "data-raw");
 const OUT = path.join(ROOT, "public/data");
 const GEN = path.join(ROOT, "src/data/generated");

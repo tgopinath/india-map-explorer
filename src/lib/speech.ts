@@ -109,3 +109,35 @@ export function speakLines(lines: string[], { force = false } = {}) {
     synth.speak(u);
   });
 }
+
+/** Find a device voice for a language tag such as "ja-JP" (exact, then same language). */
+export function voiceFor(tag: string) {
+  if (!speechSupported()) return null;
+  const all = window.speechSynthesis.getVoices();
+  const base = tag.split("-")[0].toLowerCase();
+  return all.find((v) => v.lang.toLowerCase() === tag.toLowerCase()) ?? all.find((v) => v.lang.toLowerCase().startsWith(base)) ?? null;
+}
+
+/**
+ * Say a word in its own language (e.g. こんにちは with a Japanese voice). If the device has no
+ * voice for that language, the English voice says the romanised word instead.
+ */
+export function speakNative(native: string, romanised: string, tag: string) {
+  if (!speechSupported()) return false;
+  const v = voiceFor(tag);
+  const synth = window.speechSynthesis;
+  synth.cancel();
+  last = { text: "", at: 0 };
+  const u = new SpeechSynthesisUtterance(v ? native : romanised);
+  if (v) {
+    u.voice = v;
+    u.lang = v.lang;
+  } else {
+    const en = pickVoice("en");
+    if (en) u.voice = en;
+    u.lang = en?.lang ?? "en-IN";
+  }
+  u.rate = 0.7;
+  synth.speak(u);
+  return Boolean(v);
+}

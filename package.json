@@ -10,7 +10,8 @@
     "build:maps": "node --max-old-space-size=8192 scripts/build-maps.mjs",
     "validate": "tsx scripts/validate.ts",
     "seed:sql": "tsx scripts/seed-sql.ts",
-    "build:world": "node --max-old-space-size=8192 scripts/build-world.mjs"
+    "build:world": "node --max-old-space-size=8192 scripts/build-world.mjs",
+    "build:explorer": "node scripts/build-explorer.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.119.0",

@@ -4,8 +4,10 @@ import { useEffect, useState } from "react";
 import { AlertTriangle, Database, Lock, ShieldCheck } from "lucide-react";
 import { Button, Card, DataStatusBadge, PageHeader, ProgressBar } from "@/components/ui";
 import { getDistricts, getState, MAP_BUILT_ON, MAP_SOURCE, PILOT_STATE, STATES } from "@/lib/content";
+import { countryName } from "@/lib/world";
 import { actions, useProgress, type Progress, type QuizLevel } from "@/lib/progress";
 import { syncEnabled } from "@/lib/sync";
+import { missionState } from "@/lib/missions";
 
 function labelFor(key: string) {
   const [kind, a, b] = key.split(":");
@@ -13,6 +15,8 @@ function labelFor(key: string) {
   if (kind === "state") return `Locating ${getState(a)?.name}`;
   if (kind === "capital") return `Capital of ${getState(a)?.name}`;
   if (kind === "neighbour") return `Neighbours of ${getState(a)?.name}`;
+  if (kind === "country" || kind === "flag" || kind === "wcapital" || kind === "continent") return `${{ country: "Finding", flag: "Flag of", wcapital: "Capital of", continent: "Continent of" }[kind]} ${countryName(a)}`;
+  if (kind === "landmark" || kind === "food") return `${kind === "landmark" ? "Landmark" : "Food"}: ${a.replace(/-/g, " ")}`;
   return key;
 }
 
@@ -164,6 +168,51 @@ export default function ParentPage() {
           ) : (
             <p className="text-ink-soft">No districts explored yet.</p>
           )}
+        </Card>
+      </div>
+
+      <div className="grid gap-5 lg:grid-cols-2">
+        <Card className="space-y-3">
+          <h2 className="text-xl font-bold">Learning level</h2>
+          <p className="text-ink-soft">Sets how hard the world games are. Your child can still change it in Geography Challenges.</p>
+          <div role="radiogroup" aria-label="Learning level" className="grid gap-2">
+            {(
+              [
+                ["beginner", "Beginner", "Continents, country names, flags, famous landmarks"],
+                ["intermediate", "Intermediate", "Capitals, neighbours, states and districts, food and festivals"],
+                ["advanced", "Advanced", "Every country, harder choices, timed challenges"],
+              ] as const
+            ).map(([id, label, text]) => (
+              <button
+                key={id}
+                type="button"
+                role="radio"
+                aria-checked={p.difficulty === id}
+                onClick={() => actions.setDifficulty(id)}
+                className={`rounded-2xl border-2 px-4 py-3 text-left ${p.difficulty === id ? "border-primary bg-primary-soft" : "border-line bg-white"}`}
+              >
+                <span className="block font-display text-lg font-bold">{label}</span>
+                <span className="text-sm text-ink-soft">{text}</span>
+              </button>
+            ))}
+          </div>
+        </Card>
+        <Card className="space-y-2">
+          <h2 className="text-xl font-bold">World Explorer</h2>
+          <ul className="space-y-2">
+            {[
+              ["Countries explored (passport stamps)", p.countriesExplored.length],
+              ["Landmarks visited", p.landmarksSeen.length],
+              ["Foods discovered", p.foodsSeen.length],
+              ["Festivals & clothing discovered", p.cultureSeen.length],
+              ["Greetings heard", p.greetingsHeard.length],
+              ["Missions completed", missionState(p).filter((m) => m.done).length],
+            ].map(([k, v]) => (
+              <li key={k} className="flex justify-between rounded-2xl bg-bg px-4 py-2">
+                <span>{k}</span> <b>{v}</b>
+              </li>
+            ))}
+          </ul>
         </Card>
       </div>
 

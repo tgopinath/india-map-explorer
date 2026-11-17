@@ -3,11 +3,20 @@
 import { useEffect, useMemo, useState } from "react";
 import { ArrowRight, Check, Clock, RotateCcw, Target, Trophy, Volume2, X } from "lucide-react";
 import MapView, { type RegionMark } from "./MapView";
+import GlobeView from "./GlobeView";
+import { Flag, Photo } from "./Media";
 import { Mascot, MascotSays, type Mood } from "./Mascot";
 import { Button, Card, LinkButton, Loading, ProgressBar, Stars } from "./ui";
 import { getDistricts, getState, STATES } from "@/lib/content";
 import { DISTRICT_FILLS, STATE_FILLS, useDistrictMap, useIndiaMap, useWorldMap, type RegionFeature } from "@/lib/geo";
-import { countryName } from "@/lib/world";
+import { countryName, getCountry } from "@/lib/world";
+import { countryDetails } from "@/lib/explorer";
+
+const answerCentre = (id: string): [number, number] | null => {
+  const c = getCountry(id);
+  const ll = c ? countryDetails(c).latlng : null;
+  return ll ? [ll[1], ll[0]] : null;
+};
 import type { Question } from "@/lib/questions";
 import { actions, starsFor } from "@/lib/progress";
 import { celebrate, playSound } from "@/lib/celebrate";
@@ -48,10 +57,10 @@ export default function QuizRunner({ make, stateId, onFinish, backHref, backLabe
   const [wrongTap, setWrongTap] = useState<string | null>(null);
 
   const india = useIndiaMap();
-  const world = useWorldMap(qs.some((x) => x.map === "world"));
+  const world = useWorldMap(qs.some((x) => x.map === "world" || x.map === "globe"));
   const dist = useDistrictMap(stateId ?? null);
   const q = qs[i];
-  const features = q?.map === "district" ? dist.features : q?.map === "world" ? world.features : india.features;
+  const features = q?.map === "district" ? dist.features : q?.map === "world" || q?.map === "globe" ? world.features : india.features;
 
   const names = useMemo(() => {
     const m = new Map<string, string>();
@@ -65,7 +74,7 @@ export default function QuizRunner({ make, stateId, onFinish, backHref, backLabe
     if (stateId) getDistricts(stateId).forEach((d) => d.ta && m.set(d.name, d.ta.name));
     return m;
   }, [stateId]);
-  const regionName = (id: string) => (q?.map === "district" ? names.get(id) ?? "" : q?.map === "world" ? countryName(id) : getState(id)?.name ?? "");
+  const regionName = (id: string) => (q?.map === "district" ? names.get(id) ?? "" : q?.map === "world" || q?.map === "globe" ? countryName(id) : getState(id)?.name ?? "");
   const nameOf = (f: RegionFeature) => regionName(f.properties.id);
 
   useEffect(() => {
@@ -186,7 +195,24 @@ export default function QuizRunner({ make, stateId, onFinish, backHref, backLabe
 
       <div className="grid gap-4 lg:grid-cols-[1fr_380px]">
         <div className="order-2 lg:order-1">
-          {features ? (
+          {q.map === "none" ? (
+            q.kind === "mcq" && q.image ? (
+              <Photo id={q.image} alt="Picture for this question" ratio="aspect-[4/3]" credit={answered} />
+            ) : null
+          ) : features && q.map === "globe" ? (
+            <GlobeView
+              key={q.id}
+              features={features}
+              fillFor={(f) => fills[f.properties.c]}
+              nameFor={(id) => (answered || wrongTap === id ? countryName(id) : "")}
+              marks={marks}
+              selectedId={answered ? q.answer : null}
+              onSelect={q.kind === "tap" && !answered ? answer : undefined}
+              focus={answered && q.kind === "tap" && answerCentre(q.answer) ? { coords: answerCentre(q.answer)!, zoom: 2 } : null}
+              height="min(64vh, 560px)"
+              ariaLabel="Quiz globe. Spin it to find the country."
+            />
+          ) : features ? (
             <MapView
               key={q.map}
               features={features}
@@ -254,7 +280,10 @@ export default function QuizRunner({ make, stateId, onFinish, backHref, backLabe
                             : "border-line bg-white hover:border-primary hover:bg-primary-soft disabled:opacity-60"
                       }`}
                     >
-                      {o}
+                      <span className="flex items-center gap-2">
+                        {q.optionFlags?.[q.options.indexOf(o)] && <Flag id={q.optionFlags[q.options.indexOf(o)]} size={30} />}
+                        {o}
+                      </span>
                       {state === "right" && <Check className="size-5" />}
                       {state === "wrong" && <X className="size-5" />}
                     </button>

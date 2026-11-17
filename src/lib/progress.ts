@@ -32,6 +32,15 @@ export interface Progress {
   statesViewed: string[];
   statesExplored: string[];
   countriesExplored: string[];
+  /** passport stamp date per country (YYYY-MM-DD) */
+  stamps: Record<string, string>;
+  landmarksSeen: string[];
+  foodsSeen: string[];
+  cultureSeen: string[];
+  greetingsHeard: string[];
+  /** game difficulty, set by the child or a parent */
+  difficulty: "beginner" | "intermediate" | "advanced";
+  lastVisited: { href: string; label: string } | null;
   districtsLearned: Record<string, string[]>;
   puzzles: Record<string, PuzzleRecord>;
   quizzes: QuizRecord[];
@@ -58,6 +67,13 @@ export const emptyProgress = (): Progress => ({
   statesViewed: [],
   statesExplored: [],
   countriesExplored: [],
+  stamps: {},
+  landmarksSeen: [],
+  foodsSeen: [],
+  cultureSeen: [],
+  greetingsHeard: [],
+  difficulty: "beginner",
+  lastVisited: null,
   districtsLearned: {},
   puzzles: {},
   quizzes: [],
@@ -124,6 +140,9 @@ export const today = () => {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 };
 
+/** Today's date for rendering — empty on the server so prerendered pages stay date-free. */
+export const useToday = () => useSyncExternalStore(() => () => {}, today, () => "");
+
 function daysBetween(a: string, b: string) {
   return Math.round((new Date(b).getTime() - new Date(a).getTime()) / 86400000);
 }
@@ -179,8 +198,49 @@ export const actions = {
     if (read().countriesExplored.includes(id)) return;
     update((p) => {
       p.countriesExplored = addUnique(p.countriesExplored, id);
+      p.stamps = { ...p.stamps, [id]: today() };
       p.points += 5;
     });
+  },
+  seeLandmark(id: string) {
+    if (read().landmarksSeen.includes(id)) return;
+    update((p) => {
+      p.landmarksSeen = addUnique(p.landmarksSeen, id);
+      p.points += 10;
+    });
+  },
+  seeFood(id: string) {
+    if (read().foodsSeen.includes(id)) return;
+    update((p) => {
+      p.foodsSeen = addUnique(p.foodsSeen, id);
+      p.points += 5;
+    });
+  },
+  seeCulture(id: string) {
+    if (read().cultureSeen.includes(id)) return;
+    update((p) => {
+      p.cultureSeen = addUnique(p.cultureSeen, id);
+      p.points += 5;
+    });
+  },
+  hearGreeting(id: string) {
+    if (read().greetingsHeard.includes(id)) return;
+    update((p) => {
+      p.greetingsHeard = addUnique(p.greetingsHeard, id);
+      p.points += 5;
+    });
+  },
+  setDifficulty(level: "beginner" | "intermediate" | "advanced") {
+    const p = structuredClone(read());
+    p.difficulty = level;
+    write(p);
+  },
+  visit(href: string, label: string) {
+    const cur = read().lastVisited;
+    if (cur?.href === href) return;
+    const p = structuredClone(read());
+    p.lastVisited = { href, label };
+    write(p);
   },
   learnDistrict(stateId: string, districtId: string) {
     if (read().districtsLearned[stateId]?.includes(districtId)) return;
@@ -284,12 +344,12 @@ export const BADGES: BadgeDef[] = [
 ];
 
 export const LEVELS = [
-  { name: "Little Explorer", min: 0 },
+  { name: "Junior Explorer", min: 0 },
   { name: "Map Scout", min: 300 },
-  { name: "Trail Finder", min: 1000 },
-  { name: "Navigator", min: 2500 },
-  { name: "Geo Guru", min: 5000 },
-  { name: "Map Legend", min: 10000 },
+  { name: "Trail Blazer", min: 1000 },
+  { name: "Globe Trotter", min: 2500 },
+  { name: "World Explorer", min: 5000 },
+  { name: "Master Explorer", min: 10000 },
 ];
 
 export function levelFor(points: number) {

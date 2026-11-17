@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useMemo, useRef, useState } from "react";
-import { ArrowRight, Landmark, Map as MapIcon, Search, Users } from "lucide-react";
+import { ArrowRight, Camera, Landmark, Languages, Map as MapIcon, Search, Users } from "lucide-react";
 import MapView from "@/components/MapView";
 import { GoogleMapFrame, MapModeSwitch, type MapMode } from "@/components/RealMap";
 import { MascotSays } from "@/components/Mascot";
@@ -11,6 +11,7 @@ import { districtsLabel, getState, REGION_COLOURS, STATES, stateName } from "@/l
 import { STATE_FILLS, useIndiaMap, type RegionFeature } from "@/lib/geo";
 import { actions } from "@/lib/progress";
 import { speakLocal } from "@/lib/speech";
+import { forIndianState } from "@/lib/explorer";
 
 export default function ExplorePage() {
   const { features, error } = useIndiaMap();
@@ -159,6 +160,14 @@ export default function ExplorePage() {
                   </div>
                 </div>
                 <div className="flex gap-3">
+                  <Languages className="mt-1 size-5 shrink-0 text-[#7b55e0]" />
+                  <div>
+                    <dt className="text-sm font-bold text-ink-soft">Languages</dt>
+                    <dd className="font-semibold">{s.languages.join(", ")}</dd>
+                  </div>
+                </div>
+                <StateCulture id={s.id} famous={s.famousPlaces} />
+                <div className="flex gap-3">
                   <Users className="mt-1 size-5 shrink-0 text-accent" />
                   <div>
                     <dt className="text-sm font-bold text-ink-soft">Neighbours</dt>
@@ -197,6 +206,41 @@ export default function ExplorePage() {
             </Card>
           )}
         </div>
+      </div>
+    </div>
+  );
+}
+
+/** Famous places, food and festivals for a state (from the curated content). */
+function StateCulture({ id, famous }: { id: string; famous: string[] }) {
+  const { landmarks, foods, festivals } = forIndianState(id);
+  return (
+    <div className="flex gap-3">
+      <Camera className="mt-1 size-5 shrink-0 text-primary" />
+      <div className="min-w-0">
+        <dt className="text-sm font-bold text-ink-soft">Famous places, food & festivals</dt>
+        <dd className="flex flex-wrap gap-1.5 pt-1">
+          {landmarks.map((l) => (
+            <Link key={l.id} href={`/landmarks/${l.id}`} className="rounded-full bg-accent-soft px-3 py-1 text-sm font-bold text-[#b4471c]">
+              🏛 {l.name}
+            </Link>
+          ))}
+          {famous.slice(0, landmarks.length ? 2 : 3).map((f) => (
+            <span key={f} className="rounded-full bg-bg px-3 py-1 text-sm font-bold">
+              {f}
+            </span>
+          ))}
+          {foods.map((f) => (
+            <Link key={f.id} href={`/cultures?tab=food#${f.id}`} className="rounded-full bg-secondary-soft px-3 py-1 text-sm font-bold text-[#8a5b00]">
+              🍽 {f.name}
+            </Link>
+          ))}
+          {festivals.map((f) => (
+            <Link key={f.id} href={`/cultures?tab=festivals#${f.id}`} className="rounded-full bg-[#efe8fd] px-3 py-1 text-sm font-bold text-[#6a46c9]">
+              🎉 {f.name}
+            </Link>
+          ))}
+        </dd>
       </div>
     </div>
   );

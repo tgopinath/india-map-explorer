@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import { Award, BookOpen, Compass, Globe2, Flame, Home, LayoutGrid, Map as MapIcon, MoreHorizontal, Puzzle, Trophy, Users, Volume2, VolumeX, X } from "lucide-react";
+import { Award, BookOpen, Compass, Gamepad2, Globe2, Flame, Home, Landmark, Map as MapIcon, MoreHorizontal, Puzzle, Trophy, Users, Utensils, Volume2, VolumeX, X } from "lucide-react";
 import { actions, BADGES, onBadgeEarned, useProgress } from "@/lib/progress";
 import { startSync } from "@/lib/sync";
 import { celebrate } from "@/lib/celebrate";
@@ -12,19 +12,24 @@ import { Mascot } from "./Mascot";
 
 const NAV = [
   { href: "/", label: "Home", icon: Home },
-  { href: "/explore", label: "Explore India", short: "Explore", icon: Compass },
-  { href: "/world", label: "World Map", short: "World", icon: Globe2 },
-  { href: "/states", label: "Learn States", short: "States", icon: BookOpen },
-  { href: "/districts", label: "Learn Districts", short: "Districts", icon: MapIcon },
-  { href: "/puzzle", label: "Map Puzzle", short: "Puzzle", icon: Puzzle },
-  { href: "/quiz", label: "Quiz Challenge", short: "Quiz", icon: Trophy },
-  { href: "/progress", label: "My Progress", short: "Progress", icon: Award },
+  { href: "/world", label: "Explore World", short: "World", icon: Globe2 },
+  { href: "/explore", label: "Explore India", short: "India", icon: Compass },
+  { href: "/landmarks", label: "Landmarks 360", short: "Landmarks", icon: Landmark },
+  { href: "/cultures", label: "Cultures & Food", short: "Cultures", icon: Utensils },
+  { href: "/games", label: "Geography Challenges", short: "Games", icon: Gamepad2 },
+  { href: "/progress", label: "My Achievements", short: "Me", icon: Award },
 ];
+// India learning pages live under Explore India; Parent Corner is for grown-ups.
 const EXTRA = [
-  { href: "/games", label: "Mini Games", icon: LayoutGrid },
+  { href: "/states", label: "Learn States", icon: BookOpen },
+  { href: "/districts", label: "Learn Districts", icon: MapIcon },
+  { href: "/puzzle", label: "Map Puzzles", icon: Puzzle },
+  { href: "/quiz", label: "Quiz Challenge", icon: Trophy },
   { href: "/parent", label: "Parent Corner", icon: Users },
 ];
-const MOBILE_MAIN = ["/", "/explore", "/districts", "/puzzle", "/quiz"];
+const MOBILE_MAIN = ["/", "/world", "/explore", "/games", "/progress"];
+/** Explore India stays highlighted on its learning pages. */
+const INDIA_PAGES = ["/explore", "/states", "/districts", "/puzzle", "/quiz"];
 
 // ---------- Android app mode (Material Design 3, from the shared Kolam M3 kit in public/m3) ----------
 // Only inside the Android app (or ?app=android): an M3 top app bar and navigation bar replace the web header,
@@ -39,10 +44,10 @@ type M3 = {
 type KolamM3Api = { isAndroid: boolean; init(o: Record<string, unknown>): M3 };
 const M3_DESTS = [
   { id: "home", label: "Home", icon: "home", href: "/" },
-  { id: "explore", label: "Explore", icon: "explore", href: "/explore" },
-  { id: "districts", label: "Districts", icon: "map", href: "/districts" },
-  { id: "puzzle", label: "Puzzle", icon: "extension", href: "/puzzle" },
-  { id: "quiz", label: "Quiz", icon: "emoji_events", href: "/quiz" },
+  { id: "world", label: "World", icon: "public", href: "/world" },
+  { id: "explore", label: "India", icon: "explore", href: "/explore" },
+  { id: "games", label: "Games", icon: "sports_esports", href: "/games" },
+  { id: "me", label: "Me", icon: "military_tech", href: "/progress" },
 ];
 const m3Title = (path: string) =>
   path === "/" ? "Map Explorer" : [...NAV, ...EXTRA].find((n) => n.href === path)?.label ?? null;
@@ -66,17 +71,23 @@ const IOS_ICON = {
   puzzle: svg('<path d="M10 4.5a2 2 0 1 1 4 0V6h4v4h-1.5a2 2 0 1 0 0 4H18v4.5h-4.5V17a2 2 0 1 0-4 0v1.5H5.5V14H7a2 2 0 1 0 0-4H5.5V6H10z"/>'),
   quiz: svg('<path d="M7.5 4h9v5a4.5 4.5 0 0 1-9 0z"/><path d="M7.5 6H4.5a3 3 0 0 0 3 4M16.5 6h3a3 3 0 0 1-3 4M12 13.5V17M8.5 20h7M10 17h4v3h-4z"/>'),
   speakerOff: svg('<path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z"/><path d="m15.5 9.5 5 5M20.5 9.5l-5 5"/>'),
+  globe: svg('<circle cx="12" cy="12" r="8.5"/><path d="M3.5 12h17M12 3.5c2.5 2.4 3.8 5.2 3.8 8.5s-1.3 6.1-3.8 8.5c-2.5-2.4-3.8-5.2-3.8-8.5S9.5 5.9 12 3.5z"/>'),
   grid: svg('<rect x="4" y="4" width="6.5" height="6.5" rx="1.6"/><rect x="13.5" y="4" width="6.5" height="6.5" rx="1.6"/><rect x="4" y="13.5" width="6.5" height="6.5" rx="1.6"/><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="1.6"/>'),
 };
 const IOS_TABS = [
   { id: "home", label: "Home", icon: "house", href: "/" },
-  { id: "explore", label: "Explore", icon: IOS_ICON.explore, href: "/explore" },
-  { id: "districts", label: "Districts", icon: "map", href: "/districts" },
-  { id: "puzzle", label: "Puzzle", icon: IOS_ICON.puzzle, href: "/puzzle" },
-  { id: "quiz", label: "Quiz", icon: IOS_ICON.quiz, href: "/quiz" },
+  { id: "world", label: "World", icon: IOS_ICON.globe, href: "/world" },
+  { id: "explore", label: "India", icon: IOS_ICON.explore, href: "/explore" },
+  { id: "games", label: "Games", icon: IOS_ICON.puzzle, href: "/games" },
+  { id: "me", label: "Me", icon: IOS_ICON.quiz, href: "/progress" },
 ];
 
-const isActive = (path: string, href: string) => (href === "/" ? path === "/" : path === href || path.startsWith(href + "/"));
+const isActive = (path: string, href: string) =>
+  href === "/"
+    ? path === "/"
+    : href === "/explore"
+      ? INDIA_PAGES.some((h) => path === h || path.startsWith(h + "/"))
+      : path === href || path.startsWith(href + "/");
 
 export default function AppShell({ children }: { children: ReactNode }) {
   const path = usePathname();
@@ -250,13 +261,12 @@ export default function AppShell({ children }: { children: ReactNode }) {
       <aside className="m3-web sticky top-0 hidden h-dvh w-64 shrink-0 flex-col gap-1 border-r border-line bg-white px-4 py-5 lg:flex">
         <Link href="/" className="mb-4 flex items-center gap-2 px-2">
           <Mascot size={48} />
-          <span className="font-display text-xl font-extrabold leading-tight text-primary">
-            India Map
-            <br />
-            Explorer
+          <span className="leading-tight">
+            <span className="block font-display text-xl font-extrabold text-primary">Map Explorer</span>
+            <span className="block text-xs font-bold text-ink-soft">India &amp; World 360</span>
           </span>
         </Link>
-        {[...NAV, ...EXTRA].map(({ href, label, icon: Icon }) => {
+        {NAV.map(({ href, label, icon: Icon }) => {
           const on = isActive(path, href);
           return (
             <Link
@@ -272,6 +282,12 @@ export default function AppShell({ children }: { children: ReactNode }) {
           );
         })}
         <div className="mt-auto space-y-2">
+        <Link
+          href="/parent"
+          className={`flex items-center gap-2 rounded-2xl px-3 py-2 text-sm font-bold ${isActive(path, "/parent") ? "bg-primary-soft text-primary" : "text-ink-soft hover:bg-primary-soft"}`}
+        >
+          <Users className="size-4" /> Parent Corner
+        </Link>
         <ReadToggle on={p.readAloud} />
         <VoiceLangToggle lang={p.voiceLang} />
         <div className="rounded-2xl bg-secondary-soft p-3 text-sm">
@@ -288,7 +304,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
         <header className="m3-web sticky top-0 z-30 flex items-center justify-between border-b border-line bg-white/90 px-4 py-2 backdrop-blur lg:hidden">
           <Link href="/" className="flex items-center gap-2">
             <Mascot size={36} />
-            <span className="font-display text-lg font-extrabold text-primary">India Map Explorer</span>
+            <span className="font-display text-lg font-extrabold text-primary">Map Explorer</span>
           </Link>
           <div className="flex items-center gap-2">
           <ReadToggle on={p.readAloud} compact />
@@ -299,7 +315,10 @@ export default function AppShell({ children }: { children: ReactNode }) {
           </div>
         </header>
 
-        <main className="mx-auto w-full max-w-6xl flex-1 px-4 pb-28 pt-5 sm:px-6 lg:pb-10 lg:pt-8 xl:px-20">{children}</main>
+        <main className="mx-auto w-full max-w-6xl flex-1 px-4 pb-28 pt-5 sm:px-6 lg:pb-10 lg:pt-8 xl:px-20">
+          {INDIA_PAGES.some((h) => path === h || (path.startsWith(h + "/") && h !== "/explore")) && <IndiaTabs path={path} />}
+          {children}
+        </main>
       </div>
 
       {/* Mobile bottom navigation */}
@@ -421,5 +440,33 @@ function VoiceLangToggle({ lang, compact = false }: { lang: "en" | "ta"; compact
         </button>
       ))}
     </div>
+  );
+}
+
+const INDIA_TABS = [
+  { href: "/explore", label: "India map" },
+  { href: "/states", label: "States" },
+  { href: "/districts", label: "Districts" },
+  { href: "/puzzle", label: "Puzzles" },
+  { href: "/quiz", label: "Quiz" },
+];
+/** Explore India's own little menu, shown on all its pages. */
+function IndiaTabs({ path }: { path: string }) {
+  return (
+    <nav aria-label="Explore India" className="mb-5 flex gap-1 overflow-x-auto rounded-2xl bg-white p-1 shadow-[var(--shadow-card)]">
+      {INDIA_TABS.map((t) => {
+        const on = path === t.href || path.startsWith(t.href + "/");
+        return (
+          <Link
+            key={t.href}
+            href={t.href}
+            aria-current={on ? "page" : undefined}
+            className={`shrink-0 rounded-xl px-4 py-2 font-display font-semibold ${on ? "bg-primary text-white" : "text-ink-soft hover:bg-primary-soft"}`}
+          >
+            {t.label}
+          </Link>
+        );
+      })}
+    </nav>
   );
 }
