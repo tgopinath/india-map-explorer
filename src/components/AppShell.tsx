@@ -48,6 +48,34 @@ const m3Title = (path: string) =>
   path === "/" ? "Map Explorer" : [...NAV, ...EXTRA].find((n) => n.href === path)?.label ?? null;
 const m3Parent = (path: string) => "/" + (path.split("/")[1] ?? "");
 
+// ---------- iOS app mode (Apple HIG, from the shared Kolam iOS kit in public/ios) ----------
+// Only inside the iOS app (MapExplorer-iOS shell) or with ?app=ios: an iOS navigation bar (large titles on the
+// tabs, back + centred title deeper in) and a Liquid Glass tab bar replace the web header, sidebar and bottom bar.
+// If both kits detect, iOS wins and the M3 kit is not started. In a browser nothing changes.
+type IOSAction = { id?: string; icon?: string; text?: string; label: string; onClick: () => void };
+type KolamIOSApi = {
+  isIOS: boolean;
+  init(o: Record<string, unknown>): KolamIOSApi | null;
+  navBar: { set(cfg: { title: string; large?: boolean; back?: { label: string; onClick: () => void } | null; actions?: IOSAction[]; keepTitle?: boolean }): void };
+  tabBar: { select(id: string | null): void };
+  enhance(el?: Element | null): void;
+};
+const svg = (inner: string) => `<svg class="ios-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">${inner}</svg>`;
+const IOS_ICON = {
+  explore: svg('<circle cx="12" cy="12" r="8.5"/><path d="m15.5 8.5-2 5-5 2 2-5z"/>'),
+  puzzle: svg('<path d="M10 4.5a2 2 0 1 1 4 0V6h4v4h-1.5a2 2 0 1 0 0 4H18v4.5h-4.5V17a2 2 0 1 0-4 0v1.5H5.5V14H7a2 2 0 1 0 0-4H5.5V6H10z"/>'),
+  quiz: svg('<path d="M7.5 4h9v5a4.5 4.5 0 0 1-9 0z"/><path d="M7.5 6H4.5a3 3 0 0 0 3 4M16.5 6h3a3 3 0 0 1-3 4M12 13.5V17M8.5 20h7M10 17h4v3h-4z"/>'),
+  speakerOff: svg('<path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z"/><path d="m15.5 9.5 5 5M20.5 9.5l-5 5"/>'),
+  grid: svg('<rect x="4" y="4" width="6.5" height="6.5" rx="1.6"/><rect x="13.5" y="4" width="6.5" height="6.5" rx="1.6"/><rect x="4" y="13.5" width="6.5" height="6.5" rx="1.6"/><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="1.6"/>'),
+};
+const IOS_TABS = [
+  { id: "home", label: "Home", icon: "house", href: "/" },
+  { id: "explore", label: "Explore", icon: IOS_ICON.explore, href: "/explore" },
+  { id: "districts", label: "Districts", icon: "map", href: "/districts" },
+  { id: "puzzle", label: "Puzzle", icon: IOS_ICON.puzzle, href: "/puzzle" },
+  { id: "quiz", label: "Quiz", icon: IOS_ICON.quiz, href: "/quiz" },
+];
+
 const isActive = (path: string, href: string) => (href === "/" ? path === "/" : path === href || path.startsWith(href + "/"));
 
 export default function AppShell({ children }: { children: ReactNode }) {
@@ -91,9 +119,33 @@ export default function AppShell({ children }: { children: ReactNode }) {
   useEffect(() => {
     nav.current = { path, more, router };
   });
+  const ios = useRef<KolamIOSApi | null>(null);
+  const iosActions = useRef<IOSAction[]>([]);
+  // Deeper screens have a centred title, so the voice switch moves into More there (HIG: keep bar buttons few).
+  const iosBarActions = (root: boolean) => (root ? iosActions.current : iosActions.current.filter((a) => a.id !== "iosLang"));
+  const iosNav = useRef<{ title: string; large: boolean; back: { label: string; onClick: () => void } | null } | null>(null);
+  useEffect(() => {
+    const I = (window as unknown as { KolamIOS?: KolamIOSApi }).KolamIOS;
+    if (!I?.isIOS) return;
+    document.documentElement.classList.remove("k-android", "k-app");
+    ios.current = I.init({
+      appName: "Map Explorer",
+      uaTokens: ["MapExplorer-iOS"],
+      tint: { light: "#2F5FD0", dark: "#2F5FD0" },
+      tabs: IOS_TABS,
+      currentTab: "home",
+      content: "main",
+      // Tabs move with the Next router (no full page load).
+      onTabSelect: (id: string) => {
+        const t = IOS_TABS.find((d) => d.id === id);
+        if (t) nav.current.router.push(t.href);
+        return false;
+      },
+    });
+  }, []);
   useEffect(() => {
     const K = (window as unknown as { KolamM3?: KolamM3Api }).KolamM3;
-    if (!K?.isAndroid) return;
+    if (!K?.isAndroid || ios.current) return;
     m3.current = K.init({
       primary: "#356ae6",
       title: "Map Explorer",
@@ -118,6 +170,26 @@ export default function AppShell({ children }: { children: ReactNode }) {
   useEffect(() => {
     const st = stack.current;
     if (st[st.length - 2] === path) st.pop(); else if (st[st.length - 1] !== path) st.push(path);
+    const io = ios.current;
+    if (io) {
+      const dest = IOS_TABS.find((d) => isActive(path, d.href) && (d.href !== "/" || path === "/"));
+      const root = IOS_TABS.some((d) => d.href === path);
+      io.tabBar.select(dest?.id ?? null);
+      const t = window.setTimeout(() => {
+        const heading = document.querySelector("main h1")?.textContent?.trim();
+        const title = m3Title(path) ?? heading ?? "Map Explorer";
+        const parent = m3Parent(path) === path ? "/" : m3Parent(path);
+        const backLabel = parent === "/" ? "Home" : [...NAV, ...EXTRA].find((n) => n.href === parent)?.label ?? "Back";
+        iosNav.current = {
+          title: root && path !== "/" ? (IOS_TABS.find((d) => d.href === path)?.label ?? title) : title,
+          large: root,
+          back: root ? null : { label: backLabel.split(" ").pop() ?? "Back", onClick: () => (st.length > 1 ? window.history.back() : nav.current.router.push(parent)) },
+        };
+        io.navBar.set({ ...iosNav.current, actions: iosBarActions(root), keepTitle: true });
+        io.enhance(document.querySelector("main"));
+      }, 250);
+      return () => window.clearTimeout(t);
+    }
     const c = m3.current;
     if (!c?.enabled) return;
     const dest = M3_DESTS.find((d) => isActive(path, d.href) && (d.href !== "/" || path === "/"));
@@ -129,6 +201,26 @@ export default function AppShell({ children }: { children: ReactNode }) {
     }, 250);
     return () => window.clearTimeout(t);
   }, [path]);
+  // iOS: the same three actions in the navigation bar (read aloud, voice language, More).
+  useEffect(() => {
+    const io = ios.current;
+    if (!io) return;
+    iosActions.current = [
+      { id: "iosRead", icon: p.readAloud ? "speaker.wave.2" : IOS_ICON.speakerOff, label: p.readAloud ? "Read aloud is on" : "Read aloud is off",
+        onClick: () => { if (p.readAloud) stopSpeaking(); else speak("Okay! I will read things out loud for you.", { force: true }); actions.toggleReadAloud(); } },
+      { id: "iosLang", text: p.voiceLang === "ta" ? "த" : "EN", label: p.voiceLang === "ta" ? "Voice: Tamil. Switch to English" : "Voice: English. Switch to Tamil",
+        onClick: () => {
+          const next = p.voiceLang === "ta" ? "en" : "ta";
+          actions.setVoiceLang(next);
+          if (next === "en") speak("Okay! I will speak in English.", { force: true });
+          else if (hasTamilVoice()) speak("வணக்கம்! இனி பெயர்களைத் தமிழில் சொல்கிறேன்.", { force: true, lang: "ta" });
+          else speak("This device has no Tamil voice, so I will keep speaking English.", { force: true });
+        } },
+      { id: "iosMore", icon: IOS_ICON.grid, label: "More", onClick: () => setMore(true) },
+    ];
+    // Refresh the bar's buttons in place (the per-screen effect sets title and back).
+    if (iosNav.current) io.navBar.set({ ...iosNav.current, actions: iosBarActions(iosNav.current.large), keepTitle: true });
+  }, [p.readAloud, p.voiceLang]);
   useEffect(() => {
     m3.current?.setActions([
       { id: "m3Read", icon: p.readAloud ? "volume_up" : "volume_off", label: p.readAloud ? "Read aloud is on" : "Read aloud is off",
@@ -241,6 +333,10 @@ export default function AppShell({ children }: { children: ReactNode }) {
               <button type="button" aria-label="Close" onClick={() => setMore(false)} className="grid size-10 place-items-center rounded-full bg-bg">
                 <X className="size-5" />
               </button>
+            </div>
+            <div className="ios-only mb-3 grid grid-cols-2 gap-3">
+              <ReadToggle on={p.readAloud} />
+              <VoiceLangToggle lang={p.voiceLang} />
             </div>
             <div className="grid grid-cols-2 gap-3">
               {[...NAV.filter((n) => !MOBILE_MAIN.includes(n.href)), ...EXTRA].map(({ href, label, icon: Icon }) => (

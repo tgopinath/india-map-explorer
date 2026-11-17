@@ -114,3 +114,24 @@ html.k-android main { padding-top: 12px !important; padding-bottom: 24px !import
 html.k-android .m3-sheet { background: color-mix(in srgb, var(--md-sys-color-scrim) 32%, transparent); }
 html.k-android .m3-sheet > div { background: var(--md-sys-color-surface-container-low); border-radius: var(--md-sys-shape-corner-extra-large) var(--md-sys-shape-corner-extra-large) 0 0; padding-bottom: calc(24px + var(--md-inset-bottom)); }
 html.k-android .m3-sheet > div a { background: var(--md-sys-color-surface-container-high); border-radius: var(--md-sys-shape-corner-large); }
+
+/* ---------- iOS app mode (Apple HIG) ----------
+   public/ios/kolam-ios.js adds html.k-ios inside the iOS app (or ?app=ios) and builds the navigation bar and
+   Liquid Glass tab bar; the web header, sidebar and bottom bar are hidden (the same .m3-web markers). The app's
+   colours point at iOS system colours and its tint; its kid-friendly fonts stay for the content. Light only. */
+html.k-ios .m3-web { display: none !important; }
+html.k-ios {
+  --color-primary: var(--ios-tint);
+  --color-bg: var(--ios-grouped);
+  --color-ink: var(--ios-label);
+  --color-line: var(--ios-sep);
+}
+html.k-ios body { background: var(--ios-grouped); }
+html.k-ios main { padding-top: 4px !important; padding-bottom: 24px !important; }
+html.k-ios main :is(a, button):active { opacity: .7; }
+/* More: an iOS sheet above the tab bar */
+html.k-ios .m3-sheet { background: var(--ios-scrim); }
+html.k-ios .m3-sheet > div { background: var(--ios-grouped); border-radius: var(--ios-radius-sheet) var(--ios-radius-sheet) 0 0; padding: 8px 16px calc(24px + env(safe-area-inset-bottom)); }
+html.k-ios .m3-sheet > div::before { content: ""; display: block; width: 36px; height: 5px; margin: 0 auto 12px; border-radius: 3px; background: var(--ios-fill); }
+html.k-ios .m3-sheet > div h2 { font: 600 17px/22px var(--ios-font); }
+html.k-ios .m3-sheet > div a { background: var(--ios-grouped2); border-radius: 16px; font-family: var(--ios-font); font-size: 17px; }
